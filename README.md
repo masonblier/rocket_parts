@@ -1,6 +1,9 @@
 # rocket_parts
 
-Physics construction game using the awesome [Bevy engine][bevy] and [Rapier physics engine](https://rapier.rs). Based on the [Bevy Game Template](https://github.com/NiklasEi/bevy_game_template).
+Physics construction game using the awesome [Bevy engine](https://bevyengine.org/) and [Rapier physics engine](https://rapier.rs). Based on the [Bevy Game Template](https://github.com/NiklasEi/bevy_game_template).
+
+![screenshot01](https://github.com/masonblier/rocket_parts/assets/677787/6e3c7d46-3128-4931-9488-4087ff2430e7)
+
 
 # How to use
 * Start the native app: `cargo run`
