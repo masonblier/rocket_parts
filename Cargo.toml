@@ -68,10 +68,10 @@ image = { version = "0.24", default-features = false }
 
 bevy_rapier3d = { version = "0.23" }
 
-bevy-tnua = { path = "../third-party/bevy-tnua" }
-bevy-tnua-rapier3d = { path = "../third-party/bevy-tnua/rapier3d" }
+bevy-tnua = { version = "0.13.0" }
+bevy-tnua-rapier3d = { version = "0.1.0" }
 
-isosurface = { path = "../third-party/isosurface" }
+isosurface = { version = "0.1.0-alpha.0" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = "0.3.59"
