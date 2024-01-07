@@ -1,0 +1,81 @@
+[package]
+name = "rocket_parts_game" # ToDo
+version = "0.1.0"
+publish = false
+authors = [""]
+edition = "2021"
+exclude = ["dist", "build", "assets", "credits"]
+
+[workspace]
+members = ["mobile"]
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+[features]
+dev = [
+    "bevy/dynamic_linking",
+]
+
+# All of Bevy's default features exept for the audio related ones (bevy_audio, vorbis), since they clash with bevy_kira_audio
+#   and android_shared_stdcxx, since that is covered in `mobile`
+[dependencies]
+bevy = { version = "0.12", default-features = false, features = [
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "multi-threaded",
+    "jpeg",
+    "png",
+    "hdr",
+    "x11",
+    "bevy_gizmos",
+    "tonemapping_luts",
+    "default_font",
+    "webgl2",
+] }
+bevy_kira_audio = { version = "0.18" }
+bevy_asset_loader = { version = "0.18", featuers=["3d"] }
+rand = { version = "0.8.3" }
+ron = "0.8.0"
+serde = { version = "1", features = ["derive"] }
+webbrowser = { version = "0.8", features = ["hardened"] }
+
+# keep the following in sync with Bevy's dependencies
+winit = { version = "0.28.7", default-features = false }
+image = { version = "0.24", default-features = false }
+
+bevy_rapier3d = { version = "0.23" }
+
+bevy-tnua = { path = "../third-party/bevy-tnua" }
+bevy-tnua-rapier3d = { path = "../third-party/bevy-tnua/rapier3d" }
+
+isosurface = { path = "../third-party/isosurface" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = "0.3.59"
+wasm-bindgen = "0.2.82"
+
+[build-dependencies]
+embed-resource = "1.4"
