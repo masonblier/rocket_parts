@@ -1,4 +1,4 @@
-use crate::inputs::{CursorLockState};
+use crate::inputs::CursorLockState;
 use crate::game_state::GameState;
 use crate::world::WorldState;
 use bevy::prelude::*;
@@ -38,7 +38,7 @@ fn update_animatable_interaction(
         return;
     }
 
-    for animatable_event in animatable_events.iter() {
+    for animatable_event in animatable_events.read() {
         if let Some(animatable_state) = world_state.animatables.get_mut(&animatable_event.name) {
             match animatable_event.action {
                 AnimatableEventAction::PlayOnce => {

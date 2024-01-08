@@ -1,6 +1,5 @@
 use crate::game_state::GameState;
 use bevy::prelude::*;
-use winit::dpi::Size;
 
 // system state
 #[derive(Default, Resource)]
@@ -90,11 +89,11 @@ fn update_loading_ui_interaction(
     mut vis_query: Query<&mut Visibility>,
     mut text_query: Query<&mut Text, With<LoadingUiText>>,
 ) {
-    for loading_ui_event in loading_ui_events.iter() {
+    for loading_ui_event in loading_ui_events.read() {
         match &loading_ui_event.action {
             LoadingUiEventAction::Hide => {
                 let mut vis = vis_query.get_mut(loading_ui_state.ui_entity.unwrap()).unwrap();
-                vis.set(Box::new(Visibility::Hidden));
+                vis.set(Box::new(Visibility::Hidden)).unwrap();
                 vis.set_changed();
             },
             // LoadingUiEventAction::Show => {

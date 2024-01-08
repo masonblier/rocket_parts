@@ -112,8 +112,8 @@ fn setup_mouse_inputs(
     mut mouse_wheel_events: EventReader<MouseWheel>,
 ) {
     // clear input queues
-    for _ in mouse_motion_events.iter() { }
-    for _ in mouse_wheel_events.iter() { }
+    for _ in mouse_motion_events.read() { }
+    for _ in mouse_wheel_events.read() { }
 }
 
 pub fn update_cursor_lock(
@@ -138,11 +138,11 @@ pub fn input_to_look(
     cursor_lock: Res<CursorLockState>,
 ) {
     let mut delta = Vec2::ZERO;
-    for motion in mouse_motion_events.iter() {
+    for motion in mouse_motion_events.read() {
         delta -= motion.delta;
     }
     let mut wheel_delta_y = 0.0;
-    for wheel_motion in mouse_wheel_events.iter() {
+    for wheel_motion in mouse_wheel_events.read() {
         wheel_delta_y -= wheel_motion.y;
     }
     if !cursor_lock.enabled {

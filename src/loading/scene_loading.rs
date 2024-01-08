@@ -1,5 +1,4 @@
 use crate::game_state::GameState;
-use crate::loading::{LoadingUiState};
 use bevy::asset::LoadState;
 use bevy::{prelude::*, gltf::Gltf};
 
@@ -13,9 +12,7 @@ pub struct SceneLoadingState {
 #[derive(Default, Resource)]
 pub struct WorldProps {
     pub mfps_arms_handle: Handle<Gltf>,
-    pub mfps_legs_handle: Handle<Gltf>,
     pub mfps_arms_scene_handle: Handle<Scene>,
-    pub mfps_legs_scene_handle: Handle<Scene>,
     
     pub building_kit: Handle<Gltf>,
 }
@@ -34,15 +31,11 @@ impl Plugin for SceneLoadingPlugin {
 }
 
 fn setup_scene_loading(
-    mut commands: Commands,
-    mut loading_ui_state: ResMut<LoadingUiState>,
     mut world_props: ResMut<WorldProps>,
     asset_server: Res<AssetServer>,
 ) {
     world_props.mfps_arms_handle = asset_server.load("character/mfps_arms.glb");
-    world_props.mfps_legs_handle = asset_server.load("character/mfps_legs.glb");
     world_props.mfps_arms_scene_handle = asset_server.load("character/mfps_arms.glb#Scene0");
-    world_props.mfps_legs_scene_handle = asset_server.load("character/mfps_legs.glb#Scene0");
     
     world_props.building_kit = asset_server.load("props/building_kit.glb");
 }
@@ -50,8 +43,7 @@ fn setup_scene_loading(
 fn update_scene_loading(
     mut scene_loading: ResMut<SceneLoadingState>,
     mut state: ResMut<NextState<GameState>>,
-    loading_ui_state: Res<LoadingUiState>,
-        world_props: Res<WorldProps>,
+    world_props: Res<WorldProps>,
     asset_server: Res<AssetServer>,
 ) {
     if scene_loading.loaded {
@@ -59,9 +51,7 @@ fn update_scene_loading(
     }
 
     if asset_server.load_state(&world_props.mfps_arms_handle) != LoadState::Loaded ||
-        asset_server.load_state(&world_props.mfps_legs_handle) != LoadState::Loaded ||
         asset_server.load_state(&world_props.mfps_arms_scene_handle) != LoadState::Loaded ||
-        asset_server.load_state(&world_props.mfps_legs_scene_handle) != LoadState::Loaded ||
         asset_server.load_state(&world_props.building_kit) != LoadState::Loaded
     {
         return;

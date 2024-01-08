@@ -1,8 +1,6 @@
-use crate::loading::{LoadingUiEvent,LoadingUiEventAction,
-    WorldProps};
+use crate::loading::{LoadingUiEvent,LoadingUiEventAction};
 use crate::game_state::GameState;
-use crate::world::{InteractableState,WorldAsset,WorldState,
-    WorldSoundState,AnimatableState};
+use crate::world::WorldState;
 use bevy::prelude::*;
 use bevy::scene::InstanceId;
 use std::collections::HashMap;
@@ -76,13 +74,8 @@ fn update_world_init(
 }
 
 fn setup_world_loading(
-    mut commands: Commands,
-    mut scene_spawner: ResMut<SceneSpawner>,
-    world_props: Res<WorldProps>,
     mut world_loading: ResMut<WorldLoadingState>,
     mut world_state: ResMut<WorldState>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     world_loading.done = false;
 
@@ -103,10 +96,8 @@ fn setup_world_loading(
 
 fn update_world_loading(
     mut world_loading: ResMut<WorldLoadingState>,
-    mut world_state: ResMut<WorldState>,
+    world_state: Res<WorldState>,
     mut state: ResMut<NextState<GameState>>,
-    scene_spawner: Res<SceneSpawner>,
-    asset_server: Res<AssetServer>,
     mut loading_ui_events: EventWriter<LoadingUiEvent>,
     mut rapier_config: ResMut<RapierConfiguration>,
 ) {

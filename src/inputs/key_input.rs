@@ -1,6 +1,6 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use crate::game_state::GameState;
-use crate::inputs::{CursorLockState};
+use crate::inputs::CursorLockState;
 
 // maintains mappings from input actions to game-logic actions
 #[derive(Debug, Resource)]

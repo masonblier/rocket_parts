@@ -1,4 +1,4 @@
-use crate::inputs::{CursorLockState};
+use crate::inputs::CursorLockState;
 use crate::loading::{FontAssets,LoadingUiState,LoadingUiEvent,LoadingUiEventAction};
 use crate::game_state::GameState;
 use crate::menu::{CreditsStatePlugin,PauseMenuStatePlugin};
@@ -17,7 +17,7 @@ pub struct MainMenuState {
 #[derive(Clone,Copy)]
 pub enum MenuButtonWhich {
     PlayWorld01,
-    PlayWorld03,
+    // PlayWorld03,
 }
 #[derive(Clone,Component,Copy)]
 pub struct MenuButton {
@@ -183,7 +183,7 @@ fn click_play_button(
     for (interaction, mut color, button_colors, change_state) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                if let Some(state) = change_state {
+                if let Some(_state) = change_state {
                     world_state.active_world = "world01".into();
                     info!("Going to world01!");
 

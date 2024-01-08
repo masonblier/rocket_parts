@@ -1,4 +1,4 @@
-use crate::inputs::{CursorLockState};
+use crate::inputs::CursorLockState;
 use crate::game_state::GameState;
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -43,7 +43,7 @@ fn update_world_flags_interaction(
         return;
     }
 
-    for world_flags_event in world_flags_events.iter() {
+    for world_flags_event in world_flags_events.read() {
         match world_flags_event.action {
             // WorldFlagsEventAction::Disable => {
             //     world_flags_state.flags.insert(world_flags_event.flag.clone(), false);

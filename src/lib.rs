@@ -8,6 +8,7 @@ mod inputs;
 mod loading;
 mod menu;
 mod building;
+mod props;
 mod world;
 
 use crate::actions::ActionsPlugin;
@@ -19,8 +20,9 @@ use crate::menu::MenuPlugin;
 use crate::character::CharacterFpsPlugin;
 use crate::inputs::{KeyInputPlugin, MouseInputPlugin};
 use crate::building::BuildingStatePlugin;
+use crate::props::PropsStatesPlugin;
 use crate::world::{WorldAssetLoaderPlugin,WorldLoadingPlugin,WorldStatePlugin,
-    WorldTerrainPlugin,WaterStatePlugin};
+    WorldTerrainPlugin};
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -29,7 +31,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::prelude::*;
 use bevy_tnua_rapier3d::*;
-use bevy_tnua::control_helpers::{TnuaCrouchEnforcerPlugin};
+use bevy_tnua::control_helpers::TnuaCrouchEnforcerPlugin;
 
 pub struct GamePlugin;
 
@@ -50,9 +52,12 @@ impl Plugin for GamePlugin {
             WorldLoadingPlugin,
             KeyInputPlugin,
             MouseInputPlugin,
+        ))
+        .add_plugins((
             WorldStatePlugin,
             WorldTerrainPlugin,
             BuildingStatePlugin,
+            PropsStatesPlugin,
             // WaterStatePlugin,
             MenuPlugin,
             ActionsPlugin,

@@ -14,9 +14,9 @@
 
 //! Isosurface definitions for use in multiple examples
 use isosurface::{
-    distance::{Directed, Signed},
+    distance::Signed,
     math::Vec3,
-    source::{HermiteSource, ScalarSource, VectorSource},
+    source::{HermiteSource, ScalarSource},
 };
 
 pub const CHUNK_LENGTH: f32 = 32.;
@@ -46,10 +46,10 @@ impl IsosurfaceSource {
 
 impl ScalarSource for IsosurfaceSource {
     fn sample_scalar(&self, p: Vec3) -> Signed {
-        /// Must return the signed distance (i.e. negative for coordinates inside
-        /// the surface), as our Marching Cubes implementation will evaluate the
-        /// surface at the zero-crossing.
-        /// 
+        // Must return the signed distance (i.e. negative for coordinates inside
+        // the surface), as our Marching Cubes implementation will evaluate the
+        // surface at the zero-crossing.
+        // 
         // self.source.sample_scalar(q)
         Signed(self.heightfn(p.x, p.z) - p.y)//TODO
     }

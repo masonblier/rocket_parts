@@ -1,12 +1,11 @@
-use crate::inputs::{CursorLockState,MouseCamera,MouseLookState};
+use crate::inputs::CursorLockState;
 use crate::game_state::GameState;
-use crate::loading::{FontAssets};
+use crate::loading::FontAssets;
 use crate::world::{AnimatableEvent,AnimatableEventAction,InteractableState,
     LightsEvent,LightsEventAction,
     SoundsEvent,SoundsEventAction,
-    WorldFlagsEvent,WorldFlagsEventAction,WorldFlagsState,WorldState};
+    WorldFlagsEvent,WorldFlagsEventAction,WorldFlagsState};
 use bevy::prelude::*;
-use winit::dpi::Size;
 
 const INITIAL_BLOCKED_DURATION: f32 = 0.4;
 const INTERACTION_BLOCKED_DURATION: f32 = 2.2;
@@ -34,8 +33,8 @@ impl Plugin for InteractableStatePlugin {
         .insert_resource(InteractablesState::default());
 
         app.add_systems(OnEnter(GameState::Running), setup_interactable_interaction);
-        app.add_systems(Update, update_interactable_enter_exit.run_if(in_state(GameState::Running)));
-        app.add_systems(Update, update_interactable_interaction.run_if(in_state(GameState::Running)));
+        // app.add_systems(Update, update_interactable_enter_exit.run_if(in_state(GameState::Running)));
+        // app.add_systems(Update, update_interactable_interaction.run_if(in_state(GameState::Running)));
         app.add_systems(Update, update_mouse_click_interaction.run_if(in_state(GameState::Running)));
         app.add_systems(OnExit(GameState::Running), exit_interactable_interaction);
     }
@@ -84,123 +83,123 @@ fn setup_interactable_interaction(
     interactables_state.blocked_rmn = INITIAL_BLOCKED_DURATION;
 }
 
-fn update_interactable_enter_exit(
-    mut interactables_state: ResMut<InteractablesState>,
-    mut world_state: ResMut<WorldState>,
-    // mover_parent_query: Query<&GlobalTransform, With<MoverParent>>,
-    // rapier_context: Res<RapierContext>,
-    mut game_state: ResMut<State<GameState>>,
-) {
-    // // get interactable ray from player state
-    // let mover_parent_transform = mover_parent_query.single();
-    // let mover_pos = mover_parent_transform.translation() + 0.8 * Vec3::Y;
+// fn update_interactable_enter_exit(
+//     mut interactables_state: ResMut<InteractablesState>,
+//     mut world_state: ResMut<WorldState>,
+//     mover_parent_query: Query<&GlobalTransform, With<MoverParent>>,
+//     rapier_context: Res<RapierContext>,
+//     mut game_state: ResMut<State<GameState>>,
+// ) {
+//     // get interactable ray from player state
+//     let mover_parent_transform = mover_parent_query.single();
+//     let mover_pos = mover_parent_transform.translation() + 0.8 * Vec3::Y;
 
-    // let ray_groups = InteractionGroups::new(0b0100, 0b0100);
-    // let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
+//     let ray_groups = InteractionGroups::new(0b0100, 0b0100);
+//     let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
 
-    // // cast for interactables
-    // let (entity, interactable) = if interactables_state.blocked_rmn > 0.0001 {
-    //     (None, None)
-    // } else if let Some((entity, _toi)) = rapier_context.cast_ray(
-    //     mover_pos, -0.01*Vec3::Y, 1.0, true, ray_filter
-    // ) {
-    //     if let Some(interactable) = world_state.interactable_states.get(&entity) {
-    //         (Some(entity), Some(interactable.clone()))
-    //     } else { (None, None) }
-    // } else { (None, None) };
+//     // cast for interactables
+//     let (entity, interactable) = if interactables_state.blocked_rmn > 0.0001 {
+//         (None, None)
+//     } else if let Some((entity, _toi)) = rapier_context.cast_ray(
+//         mover_pos, -0.01*Vec3::Y, 1.0, true, ray_filter
+//     ) {
+//         if let Some(interactable) = world_state.interactable_states.get(&entity) {
+//             (Some(entity), Some(interactable.clone()))
+//         } else { (None, None) }
+//     } else { (None, None) };
 
-    // // if active interactable changed
-    // if interactables_state.active_entered_entity != entity {
-    //     interactables_state.active_entered_entity = entity;
-    //     interactables_state.active_entered_interactable = interactable;
+//     // if active interactable changed
+//     if interactables_state.active_entered_entity != entity {
+//         interactables_state.active_entered_entity = entity;
+//         interactables_state.active_entered_interactable = interactable;
 
-    //     if let Some(interactable) = &interactables_state.active_entered_interactable {
-    //         // enter interaction
-    //         if interactable.interaction.interaction == "enter" {
-    //             for action in interactable.interaction.actions.iter() {
-    //                 if action.0 == "load_world" {
-    //                     world_state.active_world = "credits".into();
-    //                     game_state.set(GameState::WorldInit).unwrap();
-    //                 }
-    //             }
-    //         }
-    //     } else {
-    //         // exit interaction
-    //     }
-    // }
-}
+//         if let Some(interactable) = &interactables_state.active_entered_interactable {
+//             // enter interaction
+//             if interactable.interaction.interaction == "enter" {
+//                 for action in interactable.interaction.actions.iter() {
+//                     if action.0 == "load_world" {
+//                         world_state.active_world = "credits".into();
+//                         game_state.set(GameState::WorldInit).unwrap();
+//                     }
+//                 }
+//             }
+//         } else {
+//             // exit interaction
+//         }
+//     }
+// }
 
-fn update_interactable_interaction(
-    cursor_lock_state: Res<CursorLockState>,
-    world_flags_state: Res<WorldFlagsState>,
-    mut interactables_state: ResMut<InteractablesState>,
-    world_state: Res<WorldState>,
-    camera_query: Query<&GlobalTransform, With<MouseCamera>>,
-    // mover_parent_query: Query<&GlobalTransform, With<MoverParent>>,
-    mouse_look: Res<MouseLookState>,
-    mut text_query: Query<&mut Text, With<InteractablesOverlayText>>,
-    // mover_query: Query<&Mover>,
-) {
-    if !cursor_lock_state.enabled {
-        return;
-    }
+// fn update_interactable_interaction(
+//     cursor_lock_state: Res<CursorLockState>,
+//     world_flags_state: Res<WorldFlagsState>,
+//     mut interactables_state: ResMut<InteractablesState>,
+//     world_state: Res<WorldState>,
+//     camera_query: Query<&GlobalTransform, With<MouseCamera>>,
+//     // mover_parent_query: Query<&GlobalTransform, With<MoverParent>>,
+//     mouse_look: Res<MouseLookState>,
+//     mut text_query: Query<&mut Text, With<InteractablesOverlayText>>,
+//     // mover_query: Query<&Mover>,
+// ) {
+//     if !cursor_lock_state.enabled {
+//         return;
+//     }
     
-    // get interactable ray from player state
-    // let mover = mover_query.single();
-    // let mover_parent_transform = mover_parent_query.single();
-    // let camera_transform = camera_query.single();
-    // let ray_pos = if mover.third_person {
-    //     mover_parent_transform.translation() + 0.8 * Vec3::Y
-    // } else {
-    //     camera_transform.translation()
-    // };
-    // let ray_len = if mover.third_person { 1.2 } else { 1.7 } ;
-    // let ray_dir = if mover.third_person {
-    //     -mover_parent_transform.forward() * ray_len
-    // } else {
-    //     mouse_look.forward * ray_len
-    // };
+//     // get interactable ray from player state
+//     let mover = mover_query.single();
+//     let mover_parent_transform = mover_parent_query.single();
+//     let camera_transform = camera_query.single();
+//     let ray_pos = if mover.third_person {
+//         mover_parent_transform.translation() + 0.8 * Vec3::Y
+//     } else {
+//         camera_transform.translation()
+//     };
+//     let ray_len = if mover.third_person { 1.2 } else { 1.7 } ;
+//     let ray_dir = if mover.third_person {
+//         -mover_parent_transform.forward() * ray_len
+//     } else {
+//         mouse_look.forward * ray_len
+//     };
 
-    // let ray_groups = InteractionGroups::new(0b0100, 0b0100);
-    // let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
+//     let ray_groups = InteractionGroups::new(0b0100, 0b0100);
+//     let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
 
-    // // cast for interactables
-    // let (entity, interactable) = if interactables_state.blocked_rmn > 0.0001 {
-    //     (None, None)
-    // } else if let Some((entity, _toi)) = rapier_context.cast_ray(
-    //     ray_pos, ray_dir, 1.0, true, ray_filter
-    // ) {
-    //     if let Some(interactable) = world_state.interactable_states.get(&entity) {
-    //         (Some(entity), Some(interactable.clone()))
-    //     } else { (None, None) }
-    // } else { (None, None) };
+//     // cast for interactables
+//     let (entity, interactable) = if interactables_state.blocked_rmn > 0.0001 {
+//         (None, None)
+//     } else if let Some((entity, _toi)) = rapier_context.cast_ray(
+//         ray_pos, ray_dir, 1.0, true, ray_filter
+//     ) {
+//         if let Some(interactable) = world_state.interactable_states.get(&entity) {
+//             (Some(entity), Some(interactable.clone()))
+//         } else { (None, None) }
+//     } else { (None, None) };
 
-    // // if active interactable changed
-    // if interactables_state.active_interactable_entity != entity {
-    //     interactables_state.active_interactable_entity = entity;
-    //     interactables_state.active_interactable = interactable;
+//     // if active interactable changed
+//     if interactables_state.active_interactable_entity != entity {
+//         interactables_state.active_interactable_entity = entity;
+//         interactables_state.active_interactable = interactable;
 
-    //     if let Some(interactable) = &interactables_state.active_interactable {
-    //         // check blockers
-    //         let blockers = check_blockers(interactable.interaction.blockers.clone(),
-    //             inventory_state, world_flags_state);
+//         if let Some(interactable) = &interactables_state.active_interactable {
+//             // check blockers
+//             let blockers = check_blockers(interactable.interaction.blockers.clone(),
+//                 inventory_state, world_flags_state);
 
-    //         if let Some(first_blocker) = blockers.first() {
-    //             // show blocker text
-    //             let mut text = text_query.single_mut();
-    //             text.sections[0].value = "\n\n\nx\n\n".to_string() + &first_blocker.1;
-    //         } else {
-    //             // show interaction text
-    //             let mut text = text_query.single_mut();
-    //             text.sections[0].value = "\n\n\n.\n\n".to_string() + &interactable.interaction.interaction_text;
-    //         }
-    //     } else {
-    //         // hide interaction text
-    //         let mut text = text_query.single_mut();
-    //         text.sections[0].value = "".to_string();
-    //     }
-    // }
-}
+//             if let Some(first_blocker) = blockers.first() {
+//                 // show blocker text
+//                 let mut text = text_query.single_mut();
+//                 text.sections[0].value = "\n\n\nx\n\n".to_string() + &first_blocker.1;
+//             } else {
+//                 // show interaction text
+//                 let mut text = text_query.single_mut();
+//                 text.sections[0].value = "\n\n\n.\n\n".to_string() + &interactable.interaction.interaction_text;
+//             }
+//         } else {
+//             // hide interaction text
+//             let mut text = text_query.single_mut();
+//             text.sections[0].value = "".to_string();
+//         }
+//     }
+// }
 
 
 fn update_mouse_click_interaction(

@@ -1,27 +1,28 @@
-use crate::loading::{LoadingUiEvent,LoadingUiEventAction,
-    WorldProps};
-use crate::game_state::GameState;
-use crate::world::{InteractableState,WorldAsset,WorldState,
-    WorldSoundState,AnimatableState};
 use bevy::prelude::*;
-use bevy::scene::InstanceId;
-use std::array::IntoIter;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use bevy_rapier3d::prelude::*;
 
 #[derive(Clone,Default,Component)]
-pub struct HmSnapPoint {
+pub struct BpSnapPoint {
     pub point: Vec3,
     pub normal: Vec3,
     pub collider: Collider,
+    pub filter: BpSnapFilter,
+}
+
+#[derive(Clone,Default)]
+pub enum BpSnapFilter {
+    #[default]
+    HalfMeterBlocks,
+    // WallBlocks,
 }
 
 #[derive(Clone,Default)]
 pub struct BpInfo {
     pub bottom: Vec3,
     pub collider: Collider,
-    pub snap: Vec<HmSnapPoint>,
+    pub snap: Vec<BpSnapPoint>,
 }
 
 #[derive(Clone,Resource)]
@@ -33,57 +34,60 @@ impl Default for BpInfos {
     
     fn default() -> BpInfos {
         let hm_all = vec![
-            HmSnapPoint {
+            BpSnapPoint {
                 point: Vec3::Y/2.,
                 normal: Vec3::Y,
                 collider: Collider::cuboid(0.4, 0.1, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: -Vec3::Y/2.,
                 normal: -Vec3::Y,
                 collider: Collider::cuboid(0.4, 0.1, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: Vec3::X/2.,
                 normal: Vec3::X,
                 collider: Collider::cuboid(0.1, 0.4, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: -Vec3::X/2.,
                 normal: -Vec3::X,
                 collider: Collider::cuboid(0.1, 0.4, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: Vec3::Z/2.,
                 normal: Vec3::Z,
                 collider: Collider::cuboid(0.4, 0.4, 0.1),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: -Vec3::Z/2.,
                 normal: -Vec3::Z,
                 collider: Collider::cuboid(0.4, 0.4, 0.1),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
         ];
-            // down: Some(-Vec3::Y/2.),
-            // left: Some(-Vec3::Y/2.),
-            // right: Some(-Vec3::Y/2.),
-            // forward: Some(-Vec3::Y/2.),
-            // backward: Some(-Vec3::Y/2.),
 
         let hm_tank = vec![
-            HmSnapPoint {
+            BpSnapPoint {
                 point: Vec3::Y/2.,
                 normal: Vec3::Y,
                 collider: Collider::cuboid(0.4, 0.1, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
-            HmSnapPoint {
+            BpSnapPoint {
                 point: -Vec3::Y/2.,
                 normal: -Vec3::Y,
                 collider: Collider::cuboid(0.4, 0.1, 0.4),
+                filter: BpSnapFilter::HalfMeterBlocks,
             },
         ];
         
-        let bps: HashMap<String,BpInfo> = HashMap::<_, _>::from_iter(IntoIter::new([
+        let bps: HashMap<String,BpInfo> = HashMap::<_, _>::from_iter([
             ("metal_frame".to_string(), BpInfo {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cuboid(0.5, 0.5, 0.5),
@@ -104,7 +108,7 @@ impl Default for BpInfos {
                 collider: Collider::cylinder(0.5, 0.5),
                 snap: hm_tank.clone(),
             }),
-        ]));
+        ].into_iter());
 
         BpInfos { bps }
     }

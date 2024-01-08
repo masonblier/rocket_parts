@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
-use crate::inputs::{CursorLockState};
-use crate::loading::{FontAssets};
+use crate::inputs::CursorLockState;
+use crate::loading::FontAssets;
 use crate::menu::ButtonColors;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
@@ -98,8 +98,7 @@ fn click_play_button(
     mut cursor_lock_controls: ResMut<CursorLockState>,
     mut windows: Query<&mut Window>,
 ) {
-    let button_colors = ButtonColors::default();
-    for (interaction, mut color, button_colors, change_state) in &mut interaction_query {
+    for (interaction, mut color, button_colors, _change_state) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 next_state.set(GameState::Running);

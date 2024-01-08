@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
 use crate::inputs::MouseCamera;
-use crate::loading::{LoadingUiState};
+use crate::loading::LoadingUiState;
 use bevy::prelude::*;
 
 pub struct PreLoadingPlugin;

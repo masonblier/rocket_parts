@@ -72,9 +72,8 @@ fn setup_active_terrain(
     mut commands: Commands, 
     mut terrain_state: ResMut<WorldTerrainState>,
     mut images: ResMut<Assets<Image>>,
-    asset_server: Res<AssetServer>,
     texture_assets: Res<TextureAssets>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ArrayTextureMaterial>>>,
 ) {
     commands.spawn(DirectionalLightBundle {
@@ -177,16 +176,16 @@ fn spawn_chunks_around_lastpos(
 
 fn update_active_terrain(
     // movement_state: Res<MovementState>,
-    mut terrain_state: ResMut<WorldTerrainState>,
-    mut commands: Commands, 
-    mut meshes: ResMut<Assets<Mesh>>,
+    // mut terrain_state: ResMut<WorldTerrainState>,
+    // mut commands: Commands, 
+    // mut meshes: ResMut<Assets<Mesh>>,
     mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample), Without<MouseCamera>>,
 ) {
     let (mover_transform, _mover) = mover_query.single();
    
    let relative_pos = [mover_transform.translation.x, mover_transform.translation.z];
    if relative_pos[0] > (relative_pos[0] * CHUNK_LENGTH + CHUNK_LENGTH / 2.0) {
-        println!("moved chunk {:?}", relative_pos)
+        // println!("moved chunk {:?}", relative_pos)
    }    
 }
 

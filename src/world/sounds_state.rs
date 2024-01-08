@@ -7,7 +7,9 @@ use bevy_kira_audio::prelude::*;
 pub struct SoundsStatePlugin;
 
 pub enum SoundsEventAction {
+    #[allow(dead_code)]
     Pause,
+    #[allow(dead_code)]
     Resume,
     Toggle,
 }
@@ -133,7 +135,7 @@ fn update_sounds_interaction(
     mut world_state: ResMut<WorldState>,
     mut sounds_events: EventReader<SoundsEvent>,
 ) {
-    for sounds_event in sounds_events.iter() {
+    for sounds_event in sounds_events.read() {
         if let Some(sounds_state) = world_state.animatable_sounds.get_mut(&sounds_event.name) {
             match sounds_event.action {
                 SoundsEventAction::Toggle => {
@@ -167,7 +169,7 @@ fn update_sounds_states(
     let camera_transform = query.single();
 
     // for each playing audio, update state and panning from (camera_pos - audio_pos)
-    for (sound_name, mut sounds_state) in world_state.animatable_sounds.iter_mut() {
+    for (sound_name, sounds_state) in world_state.animatable_sounds.iter_mut() {
         if !sounds_state.paused {
             if sound_name == "train" || sound_name == "footsteps" {
                 continue;

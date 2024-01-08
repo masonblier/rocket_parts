@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
-use crate::inputs::{MouseCamera, MouseLookState};
-use crate::character::{CharacterMotionConfigForPlatformerExample};
+use crate::inputs::MouseLookState;
+use crate::character::CharacterMotionConfigForPlatformerExample;
 
 use std::f32::consts::PI;
 use bevy::{
@@ -10,7 +10,7 @@ use bevy::{
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages, AsBindGroup, ShaderRef
         },
-        view::RenderLayers,
+        // view::RenderLayers,
     }, core_pipeline::clear_color::ClearColorConfig,
 };
 
@@ -88,7 +88,7 @@ fn setup_water_plane(
     // });
 
     // This specifies the layer used for the first pass, which will be attached to the first pass camera and cube.
-    let first_pass_layer = RenderLayers::layer(1);
+    // let first_pass_layer = RenderLayers::layer(1);
 
     // camera for first pass
     commands.spawn((
@@ -112,7 +112,7 @@ fn setup_water_plane(
     ));
 
 
-    let material_handle = materials.add(StandardMaterial {
+    let _material_handle = materials.add(StandardMaterial {
         base_color_texture: Some(image_handle),
         reflectance: 0.02,
         unlit: false,

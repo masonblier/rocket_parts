@@ -1,27 +1,12 @@
-use crate::actions::Actions;
-use crate::loading::{WorldProps};
+use crate::building::BuildingState;
+use crate::loading::WorldProps;
 use crate::GameState;
-use crate::inputs::{KeyInputState,MouseCamera,MouseLookState};
-use crate::building::{BuildingState};
+use crate::inputs::MouseCamera;
 
 use bevy::prelude::*;
-use bevy::input::mouse::{MouseWheel, self};
+use bevy::input::mouse::MouseWheel;
 use bevy::gltf::Gltf;
 use bevy::utils::HashMap;
-use bevy_rapier3d::prelude::*;
-use bevy_tnua::prelude::*;
-use bevy_tnua::{
-    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaGhostPlatform, TnuaGhostSensor,
-    TnuaProximitySensor, TnuaToggle,
-};
-use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinJumpState,
-};
-use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
-    TnuaSimpleFallThroughPlatformsHelper,
-};
-use bevy_tnua_rapier3d::*;
 
 #[derive(Default)]
 pub struct CharacterFpsArmsPlugin;
@@ -100,7 +85,7 @@ fn mfps_arms_animation_patcher_system(
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum AnimationState {
+pub enum AnimationState {
     Init,
     Idle,
     BuildToolOpen,
@@ -110,12 +95,12 @@ enum AnimationState {
     UnbuildToolHold,
 }
 
-const tool_states: [AnimationState; 3] = [
+const TOOL_STATES: [AnimationState; 3] = [
     AnimationState::Idle,
     AnimationState::BuildToolHold,
     AnimationState::UnbuildToolHold,
 ];
-const tool_open_states: [AnimationState; 3] = [
+const TOOL_OPEN_STATES: [AnimationState; 3] = [
     AnimationState::Idle,
     AnimationState::BuildToolOpen,
     AnimationState::UnbuildToolOpen,
@@ -143,14 +128,14 @@ fn animate_mfps_arms(
             change_action = AnimationState::Idle;
         } else {
             // check for tool change from mouse wheel scroll
-            for mwe in mouse_wheel_events.iter() {
+            for mwe in mouse_wheel_events.read() {
                 handler.active_index += mwe.y as i32;
-                if handler.active_index < 0 { handler.active_index = (tool_states.len() as i32) - 1};
-                if handler.active_index >= (tool_states.len() as i32) { handler.active_index = 0};
+                if handler.active_index < 0 { handler.active_index = (TOOL_STATES.len() as i32) - 1};
+                if handler.active_index >= (TOOL_STATES.len() as i32) { handler.active_index = 0};
             }
-            if handler.animation_state != tool_states[handler.active_index as usize] &&
-            handler.animation_state != tool_open_states[handler.active_index as usize] {
-                change_action = tool_states[handler.active_index as usize];
+            if handler.animation_state != TOOL_STATES[handler.active_index as usize] &&
+            handler.animation_state != TOOL_OPEN_STATES[handler.active_index as usize] {
+                change_action = TOOL_STATES[handler.active_index as usize];
             }
 
             if change_action == AnimationState::BuildToolHold && mouse_btn_input.pressed(MouseButton::Left) {

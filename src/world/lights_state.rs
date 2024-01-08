@@ -1,4 +1,4 @@
-use crate::inputs::{CursorLockState};
+use crate::inputs::CursorLockState;
 use crate::game_state::GameState;
 use crate::world::WorldState;
 use bevy::prelude::*;
@@ -35,7 +35,7 @@ fn update_light_interaction(
         return;
     }
 
-    for lights_event in lights_events.iter() {
+    for lights_event in lights_events.read() {
         if let Some(light_entity) = world_state.animatable_lights.get_mut(&lights_event.name) {
             match lights_event.action {
                 LightsEventAction::Toggle => {
