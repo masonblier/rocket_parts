@@ -6,6 +6,7 @@ use bevy::prelude::*;
 pub struct LightsStatePlugin;
 
 pub enum LightsEventAction {
+    #[allow(dead_code)]
     Toggle,
 }
 

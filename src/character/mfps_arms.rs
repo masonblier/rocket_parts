@@ -1,4 +1,4 @@
-use crate::building::BuildingState;
+use crate::actions::BuildingActionsState;
 use crate::loading::WorldProps;
 use crate::GameState;
 use crate::inputs::MouseCamera;
@@ -112,7 +112,7 @@ fn animate_mfps_arms(
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    building_state: Res<BuildingState>,
+    building_actions: Res<BuildingActionsState>,
     mouse_btn_input: Res<Input<MouseButton>>,
 
 ) {
@@ -124,7 +124,7 @@ fn animate_mfps_arms(
 
         let mut change_action = handler.animation_state;
 
-        if building_state.tool_active {
+        if building_actions.building_active {
             change_action = AnimationState::Idle;
         } else {
             // check for tool change from mouse wheel scroll

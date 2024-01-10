@@ -1,6 +1,6 @@
-use crate::world::{AnimatableStatePlugin,InteractableStatePlugin,
+use crate::world::{
     LightsStatePlugin,SoundsStatePlugin,
-    WorldFlagsStatePlugin,WorldInteraction};
+    WorldInteraction};
 use bevy::prelude::*;
 use std::collections::HashMap;
 
@@ -39,11 +39,9 @@ pub struct WorldStatePlugin;
 impl Plugin for WorldStatePlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_plugins((AnimatableStatePlugin,
-            InteractableStatePlugin,
+        .add_plugins((
             LightsStatePlugin,
             SoundsStatePlugin,
-            WorldFlagsStatePlugin))
-        ;
+        ));
     }
 }

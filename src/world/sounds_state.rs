@@ -11,6 +11,7 @@ pub enum SoundsEventAction {
     Pause,
     #[allow(dead_code)]
     Resume,
+    #[allow(dead_code)]
     Toggle,
 }
 

@@ -28,6 +28,7 @@ pub struct BpInfo {
 #[derive(Clone,Resource)]
 pub struct BpInfos {
     pub bps: HashMap<String,BpInfo>,
+    pub toolbar_order: Vec<String>,
 }
 
 impl Default for BpInfos {
@@ -98,18 +99,25 @@ impl Default for BpInfos {
                 collider: Collider::cylinder(0.5, 0.5),
                 snap: hm_tank.clone(),
             }),
-            ("nose_cone".to_string(), BpInfo {
-                bottom: -Vec3::Y/2.,
-                collider: Collider::cone(0.5, 0.5),
-                snap: vec![],
-            }),
             ("thruster".to_string(), BpInfo {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cylinder(0.5, 0.5),
                 snap: hm_tank.clone(),
             }),
+            ("nose_cone".to_string(), BpInfo {
+                bottom: -Vec3::Y/2.,
+                collider: Collider::cone(0.5, 0.5),
+                snap: vec![],
+            }),
         ].into_iter());
 
-        BpInfos { bps }
+        let toolbar_order = vec![
+            "metal_frame".to_string(),
+            "fuel_tank".to_string(),
+            "thruster".to_string(),
+            "nose_cone".to_string(),
+        ];
+
+        BpInfos { bps, toolbar_order }
     }
 }

@@ -1,5 +1,6 @@
 use crate::game_state::GameState;
 use crate::loading::WorldProps;
+use crate::actions::BuildingActionsState;
 use crate::inputs::MouseLookState;
 use crate::building::{BpInfo,BpInfos,BpSnapPoint,find_or_create_grid,GridEntity,
     insert_bp_snaps,BuildingToolbarPlugin};
@@ -7,7 +8,6 @@ use crate::props::ThrusterInteractable;
 use crate::character::CharacterMotionConfigForPlatformerExample;
 
 use bevy::{prelude::*, gltf::Gltf};
-use bevy::input::mouse::MouseWheel;
 use bevy_rapier3d::prelude::*;
 
 const BUILD_DIST: f32 = 3.;
@@ -16,11 +16,8 @@ const SNAPS_GROUP: Group = Group::GROUP_3;
 // system state
 #[derive(Default, Resource)]
 pub struct BuildingState {
-    pub tool_active: bool,
     pub active_index: usize,
     pub shown_bp_entity: Option<Entity>,
-    pub thrusters_active: bool,
-    pub thrusters_animating: bool,
 }
 
 
@@ -40,7 +37,6 @@ impl Plugin for BuildingStatePlugin {
         // .add_systems(OnEnter(GameState::Running), setup_building_interactive_states)
         .add_systems(Update, (
             update_building_state.run_if(in_state(GameState::Running)),
-            update_building_tool_active.run_if(in_state(GameState::Running)),
             update_building_bp_transform.run_if(in_state(GameState::Running)),
         ));
     }
@@ -52,19 +48,19 @@ fn update_building_state(
     world_props: Res<WorldProps>,
     mouse_btn_input: Res<Input<MouseButton>>,
     mut building_state: ResMut<BuildingState>,
+    building_actions: Res<BuildingActionsState>,
     mouse_look: Res<MouseLookState>,
     mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample)>,
     grid_query: Query<(&Transform, &GridEntity)>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
     rapier_context: Res<RapierContext>,
     infos: Res<BpInfos>,
     snaps_query: Query<(&GlobalTransform, &BpSnapPoint)>,
     ge_entities: Query<&GridEntityRef>,
 ) {    
-    let building_kit_names = infos.bps.keys().collect::<Vec<&String>>();
+    let building_kit_names = infos.toolbar_order.clone();
 
     // if tool not active
-    if !building_state.tool_active {
+    if !building_actions.building_active {
         // hide bp model if still shown
         if let Some(shown_bp_entity) = building_state.shown_bp_entity {
             commands.entity(shown_bp_entity).despawn_recursive();
@@ -74,15 +70,9 @@ fn update_building_state(
         return;
     }
 
-    // check for bp change from mouse wheel scroll
-    let mut next_index = building_state.active_index as i32;
-    for mwe in mouse_wheel_events.read() {
-        next_index += mwe.y as i32;
-        if next_index < 0 { next_index = (building_kit_names.len() as i32) - 1};
-        if next_index >= (building_kit_names.len() as i32) { next_index = 0};
-    }
-    if building_state.active_index != (next_index as usize) {
-        building_state.active_index = next_index as usize;
+    // check for bp index change from BuildingActionsState
+    if building_state.active_index != (building_actions.active_index as usize) {
+        building_state.active_index = building_actions.active_index as usize;
         if let Some(shown_bp_entity) = building_state.shown_bp_entity {
             commands.entity(shown_bp_entity).despawn_recursive();
             building_state.shown_bp_entity = None;
@@ -92,7 +82,7 @@ fn update_building_state(
 
     // get projected position/rotation from collision raycast
     let (mover_transform, _mover) = mover_query.single();
-    let scene_name = building_kit_names[building_state.active_index];
+    let scene_name = &building_kit_names[building_state.active_index];
     let bp_info = infos.bps[&scene_name.to_string()].clone();
     let cast_result = cast_build_shape(mouse_look.forward, mover_transform, &bp_info, rapier_context, snaps_query, &ge_entities);
     let target_transform = cast_result.1;
@@ -106,7 +96,7 @@ fn update_building_state(
     }
 
     if mouse_btn_input.just_pressed(MouseButton::Left) {
-        let scene_name = building_kit_names[building_state.active_index];
+        let scene_name = &building_kit_names[building_state.active_index];
         if let Some(gltf) = assets_gltf.get(&world_props.building_kit) {
             let (grid_entity, grid_transform) = find_or_create_grid(
                 &mut commands, cast_result.2, target_transform, &grid_query);
@@ -140,21 +130,6 @@ fn update_building_state(
                 colliders
             ));
         }
-    }
-}
-
-fn update_building_tool_active(
-    mut building_state: ResMut<BuildingState>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    // check tool toggle
-    if keyboard_input.just_pressed(KeyCode::B) {
-        building_state.tool_active = !building_state.tool_active;
-    }
-
-    // check thrusters toggle
-    if keyboard_input.just_pressed(KeyCode::Z) {
-        building_state.thrusters_active = !building_state.thrusters_active;
     }
 }
 

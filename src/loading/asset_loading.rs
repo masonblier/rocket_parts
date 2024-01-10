@@ -12,10 +12,8 @@ impl Plugin for AssetLoadingPlugin {
         )
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::AssetLoading)
-        // .add_collection_to_loading_state::<_, CharacterAssets>(GameState::AssetLoading)
-        .add_collection_to_loading_state::<_, TextureAssets>(GameState::AssetLoading)
-        // .add_collection_to_loading_state::<_, WorldAssets>(GameState::AssetLoading)
-        // .add_collection_to_loading_state::<_, WorldProps>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, IconAssets>(GameState::AssetLoading)
+       .add_collection_to_loading_state::<_, TextureAssets>(GameState::AssetLoading)
         ;
     }
 }
@@ -33,6 +31,18 @@ pub struct FontAssets {
 pub struct AudioAssets {
     #[asset(path = "audio/build_01.ogg")]
     pub build: Handle<AudioSource>,
+}
+
+#[derive(AssetCollection,Resource)]
+pub struct IconAssets {
+    #[asset(path = "textures/icon_metal_frame.png")]
+    pub metal_frame: Handle<Image>,
+    #[asset(path = "textures/icon_fuel_tank.png")]
+    pub fuel_tank: Handle<Image>,
+    #[asset(path = "textures/icon_nose_cone.png")]
+    pub nose_cone: Handle<Image>,
+    #[asset(path = "textures/icon_thruster.png")]
+    pub thruster: Handle<Image>,
 }
 
 #[derive(AssetCollection,Resource)]

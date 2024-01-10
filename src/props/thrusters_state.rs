@@ -1,6 +1,6 @@
+use crate::actions::BuildingActionsState;
 use crate::game_state::GameState;
 use crate::loading::TextureAssets;
-use crate::building::BuildingState;
 
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -98,7 +98,8 @@ fn create_thruster_sprite(
 fn update_thursters_state(
     mut commands: Commands,
     // time: Res<Time>,
-    mut building_state: ResMut<BuildingState>,
+    building_actions: Res<BuildingActionsState>,
+    mut thrusters_state: ResMut<ThrustersState>,
     thursters_query: Query<(Entity, &ThrusterInteractable, &GlobalTransform)>,
     thurster_sprites_query: Query<(Entity, &ThrusterSprite)>,
     texture_handles: Res<TextureAssets>,
@@ -106,8 +107,8 @@ fn update_thursters_state(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ext_forces: Query<&mut ExternalForce>
 ) {
-    if !building_state.thrusters_active {
-        if building_state.thrusters_animating {
+    if !building_actions.thrusters_active {
+        if thrusters_state.thrusters_animating {
             // cleanup sprites
             thurster_sprites_query.for_each(|ts| { commands.entity(ts.0).despawn_recursive(); });
             // remove external force from parent grid
@@ -115,12 +116,12 @@ fn update_thursters_state(
                 let mut ext_force = ext_forces.get_mut(t.1.grid.unwrap()).unwrap();
                 ext_force.force = Vec3::ZERO;
             });
-            building_state.thrusters_animating = false;
+            thrusters_state.thrusters_animating = false;
         }
         return;
     }
     
-    if building_state.thrusters_active && !building_state.thrusters_animating {
+    if !thrusters_state.thrusters_animating {
         thursters_query.for_each(|(entity, ti, thruster_gt )| {
             // setup combustion sprites
             create_thruster_sprite(&mut commands, &texture_handles, &mut meshes, &mut materials, entity);
@@ -128,7 +129,7 @@ fn update_thursters_state(
             let mut ext_force = ext_forces.get_mut(ti.grid.unwrap()).unwrap();
             ext_force.force = thruster_gt.up() * THRUSTER_MAX_FORCE;
         });
-        building_state.thrusters_animating = true;
+        thrusters_state.thrusters_animating = true;
     }
 
     // TODO animate sprites...
