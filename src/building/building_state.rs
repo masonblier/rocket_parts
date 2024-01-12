@@ -2,16 +2,16 @@ use crate::game_state::GameState;
 use crate::loading::WorldProps;
 use crate::actions::BuildingActionsState;
 use crate::inputs::MouseLookState;
-use crate::building::{BpInfo,BpInfos,BpSnapPoint,find_or_create_grid,GridEntity,
-    insert_bp_snaps,BuildingToolbarPlugin};
+use crate::building::{BpInfo,BpInfos,BpSnapPoint,BpSnapsEvent,BpSnapsRepeatEvent,
+    find_or_create_grid,GridBlock,GridSnapPoint,
+    update_building_bp_snaps,update_building_bp_snaps_repeats,cast_snaps_ray,
+    BuildingToolbarPlugin,BUILD_DIST};
 use crate::props::ThrusterInteractable;
-use crate::character::CharacterMotionConfigForPlatformerExample;
+use crate::character::CharacterFpsMotionConfig;
 
 use bevy::{prelude::*, gltf::Gltf};
 use bevy_rapier3d::prelude::*;
 
-const BUILD_DIST: f32 = 3.;
-const SNAPS_GROUP: Group = Group::GROUP_3;
 
 // system state
 #[derive(Default, Resource)]
@@ -20,24 +20,21 @@ pub struct BuildingState {
     pub shown_bp_entity: Option<Entity>,
 }
 
-
-#[derive(Component,Debug)]
-pub struct GridEntityRef {
-    pub entity: Entity,
-    pub collider: Option<(Vec3,Quat,Collider)>,
-}
-
 pub struct BuildingStatePlugin;
 impl Plugin for BuildingStatePlugin {
     fn build(&self, app: &mut App) {
         app
         .insert_resource(BuildingState::default())
         .insert_resource(BpInfos::default())
+        .add_event::<BpSnapsEvent>()
+        .add_event::<BpSnapsRepeatEvent>()
         .add_plugins((BuildingToolbarPlugin::default(),))
         // .add_systems(OnEnter(GameState::Running), setup_building_interactive_states)
         .add_systems(Update, (
             update_building_state.run_if(in_state(GameState::Running)),
             update_building_bp_transform.run_if(in_state(GameState::Running)),
+            update_building_bp_snaps.run_if(in_state(GameState::Running)),
+            update_building_bp_snaps_repeats.run_if(in_state(GameState::Running)),
         ));
     }
 }
@@ -50,12 +47,14 @@ fn update_building_state(
     mut building_state: ResMut<BuildingState>,
     building_actions: Res<BuildingActionsState>,
     mouse_look: Res<MouseLookState>,
-    mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample)>,
-    grid_query: Query<(&Transform, &GridEntity)>,
+    mover_query: Query<(&Transform, &CharacterFpsMotionConfig)>,
     rapier_context: Res<RapierContext>,
     infos: Res<BpInfos>,
-    snaps_query: Query<(&GlobalTransform, &BpSnapPoint)>,
-    ge_entities: Query<&GridEntityRef>,
+    snaps_query: Query<&BpSnapPoint>,
+    gsp_query: Query<&GridSnapPoint>,
+    gb_query: Query<&GridBlock>,
+    mut snaps_events: EventWriter<BpSnapsEvent>,
+    mut transforms_query: Query<(&mut Transform, Without<CharacterFpsMotionConfig>)>,    
 ) {    
     let building_kit_names = infos.toolbar_order.clone();
 
@@ -84,7 +83,11 @@ fn update_building_state(
     let (mover_transform, _mover) = mover_query.single();
     let scene_name = &building_kit_names[building_state.active_index];
     let bp_info = infos.bps[&scene_name.to_string()].clone();
-    let cast_result = cast_build_shape(mouse_look.forward, mover_transform, &bp_info, rapier_context, snaps_query, &ge_entities);
+    let cast_result = cast_build_shape(
+        mouse_look.forward, mover_transform, 
+        &bp_info, &rapier_context, snaps_query, &gsp_query, &gb_query,
+        &mut transforms_query, building_actions.active_rotation,
+    );
     let target_transform = cast_result.1;
 
     // show bp model if not shown
@@ -98,20 +101,23 @@ fn update_building_state(
     if mouse_btn_input.just_pressed(MouseButton::Left) {
         let scene_name = &building_kit_names[building_state.active_index];
         if let Some(gltf) = assets_gltf.get(&world_props.building_kit) {
-            let (grid_entity, grid_transform) = find_or_create_grid(
-                &mut commands, cast_result.2, target_transform, &grid_query);
+            let (grid_entity, _grid_transform) = find_or_create_grid(
+                &mut commands, cast_result.3, target_transform, &mut transforms_query);
 
             // insert solid gltf entity, colliders
-            let local_translation = target_transform.translation - grid_transform.translation;
-            let rot_quat = target_transform.rotation;
+            let local_translation = cast_result.2.translation;
+            let rot_quat = cast_result.2.rotation;
             let sb = SceneBundle {
                 scene: gltf.named_scenes[scene_name].clone(),
-                transform: target_transform.with_translation(local_translation),
+                transform: Transform::from_translation(local_translation).with_rotation(rot_quat),
                 ..Default::default()
             };
             let mut build_block = commands.spawn(sb);
             build_block.insert(AdditionalMassProperties::Mass(2.));
-            build_block.insert(GridEntityRef { entity: grid_entity, collider: Some((local_translation, rot_quat, bp_info.collider.clone())) });
+            build_block.insert(GridBlock { 
+                entity: grid_entity, 
+                collider: Some((local_translation, rot_quat, bp_info.collider.clone())), 
+            });
             build_block.set_parent(grid_entity);
             // add block interactable extras
             if scene_name == "thruster" {
@@ -119,12 +125,13 @@ fn update_building_state(
             }
             
             // insert building tool snap colliders
-            insert_bp_snaps(&mut commands, bp_info.clone(), grid_entity, target_transform);
-            
+            snaps_events.send(BpSnapsEvent::InsertSnaps(
+                bp_info.clone(), grid_entity, Transform::from_translation(local_translation).with_rotation(rot_quat)));
 
             // update collider entities
-            let mut colliders: Vec<(Vec3,Quat,Collider)> = ge_entities.iter().filter(|ge|{ ge.collider.is_some()})
-                .map(|ge| { ge.collider.clone().unwrap() }).collect();
+            let mut colliders: Vec<(Vec3,Quat,Collider)> = gb_query.iter()
+                .filter(|gb|{ gb.entity == grid_entity && gb.collider.is_some()})
+                .map(|gb| { gb.collider.clone().unwrap() }).collect();
             colliders.push((local_translation, rot_quat, bp_info.collider.clone()));
             commands.entity(grid_entity).insert(Collider::compound(
                 colliders
@@ -135,24 +142,30 @@ fn update_building_state(
 
 fn update_building_bp_transform(
     building_state: ResMut<BuildingState>,
+    building_actions: Res<BuildingActionsState>,
     infos: Res<BpInfos>,
     mouse_look: Res<MouseLookState>,
-    mover_query: Query<(&Transform, With<CharacterMotionConfigForPlatformerExample>)>,
-    mut transforms_query: Query<(&mut Transform, Without<CharacterMotionConfigForPlatformerExample>)>,    
+    mover_query: Query<(&Transform, With<CharacterFpsMotionConfig>)>,
+    mut transforms_query: Query<(&mut Transform, Without<CharacterFpsMotionConfig>)>,    
     rapier_context: Res<RapierContext>,
-    snaps_query: Query<(&GlobalTransform, &BpSnapPoint)>,
-    ge_entities: Query<&GridEntityRef>,
+    snaps_query: Query<&BpSnapPoint>,
+    gsp_query: Query<&GridSnapPoint>,
+    gb_query: Query<&GridBlock>,
 ) {    
     let building_kit_names = infos.bps.keys().collect::<Vec<&String>>();
 
     // todo raycast
     if let Some(shown_bp_entity) = building_state.shown_bp_entity {
+        let (mover_transform, _mover) = mover_query.single();
+        let scene_name = building_kit_names[building_state.active_index];
+        let bp_info = &infos.bps[&scene_name.to_string()];
+        let cast_result = cast_build_shape(
+            mouse_look.forward, mover_transform, 
+            bp_info, &rapier_context, snaps_query, &gsp_query, &gb_query,
+            &mut transforms_query, building_actions.active_rotation,
+        );
         if let Ok(mut bp_transform) = transforms_query.get_mut(shown_bp_entity) {
-            let (mover_transform, _mover) = mover_query.single();
-            let scene_name = building_kit_names[building_state.active_index];
-            let bp_info = &infos.bps[&scene_name.to_string()];
-            let cast_result = cast_build_shape(mouse_look.forward, mover_transform, bp_info, rapier_context, snaps_query, &ge_entities);
-            bp_transform.0.clone_from(&cast_result.1);
+            bp_transform.0.clone_from(&cast_result.1.mul_transform(cast_result.2));
         }
     }
 }
@@ -183,40 +196,51 @@ fn cast_build_shape(
     mouse_forward: Vec3,
     mover_transform: &Transform,
     bp_info: &BpInfo,
-    rapier_context: Res<RapierContext>,
-    snaps_query: Query<(&GlobalTransform, &BpSnapPoint)>,
-    ge_entities: &Query<&GridEntityRef>,
-) -> (Option<Entity>, Transform, Option<Entity>) {
+    rapier_context: &Res<RapierContext>,
+    snaps_query: Query<&BpSnapPoint>,
+    gsp_query: &Query<&GridSnapPoint>,
+    gb_query: &Query<&GridBlock>,
+    transforms_query: &mut Query<(&mut Transform, Without<CharacterFpsMotionConfig>)>,
+    local_rot: Quat,  
+) -> (Option<Entity>, Transform, Transform, Option<Entity>) {
     // get interactable ray from player state
-    let mover_pos = mover_transform.translation + 0.8 * Vec3::Y;
+    let mover_pos = mover_transform.translation + 0.4 * Vec3::Y;
+    // default transform of item (in new grid)
+    let rot_in_place_transform = Transform::from_rotation(local_rot);
 
-    // cast ray against snapping colliders
-    let ray_groups = CollisionGroups::new(SNAPS_GROUP, SNAPS_GROUP);
-    let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
-    if let Some((entity, _intersection)) = rapier_context.cast_ray_and_get_normal(
-            mover_pos, mouse_forward, BUILD_DIST, true, ray_filter
+    // check for building snaps
+    if let Some(snap_result) = cast_snaps_ray(
+        mouse_forward, mover_pos, bp_info,
+        rapier_context, gsp_query, gb_query,
+        snaps_query,
+        transforms_query,
+        local_rot
     ) {
-        if let Ok((snap_transform, snap)) = snaps_query.get(entity) {
-            let ge = ge_entities.get(entity).unwrap();
-            let snap_point = snap_transform.translation();
-            let rot_quat = Quat::from_rotation_arc(Vec3::Y, snap.normal);
-            return (Some(entity), Transform::from_translation(snap_point - rot_quat.mul_vec3(bp_info.bottom))
-                .with_rotation(rot_quat), Some(ge.entity));
+        // snap to grid block
+        if let Some(grid_entity) = snap_result.grid_entity {
+            if let Ok((grid_transform, _)) = transforms_query.get(grid_entity) {
+                return (snap_result.snap_entity, 
+                    grid_transform.clone(),
+                    snap_result.local_transform, 
+                    snap_result.grid_entity,
+                );
+            }
         }
+
+        // snap to world
+        return (snap_result.snap_entity, 
+            snap_result.local_transform,
+            rot_in_place_transform,
+            None,
+        );
     }
 
-    // cast ray against world collidables
-    let ray_groups = CollisionGroups::new(Group::GROUP_2, Group::GROUP_2);
-    let ray_filter = QueryFilter { groups: Some(ray_groups), ..Default::default()};
-    if let Some((entity, intersection)) = rapier_context.cast_ray_and_get_normal(
-            mover_pos, mouse_forward, BUILD_DIST, true, ray_filter
-    ) {
-        let ger = ge_entities.get(entity).map(|ge| Some(ge.entity)).unwrap_or(None);
-        let rot_quat = Quat::from_rotation_arc(Vec3::Y, intersection.normal);
-        (Some(entity), Transform::from_translation(intersection.point - rot_quat.mul_vec3(bp_info.bottom))
-            .with_rotation(rot_quat), ger)
-    } else {
-        (None, Transform::from_translation(mover_transform.translation + mouse_forward * BUILD_DIST - bp_info.bottom), None)
-    }
-
+    // no snap
+    let cast_end = Transform::from_translation(mover_transform.translation + 
+        mouse_forward * BUILD_DIST - bp_info.bottom);
+    return (None, 
+        cast_end,
+        rot_in_place_transform,
+        None,
+    );
 }

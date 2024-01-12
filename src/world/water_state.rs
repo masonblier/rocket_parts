@@ -1,6 +1,6 @@
 use crate::game_state::GameState;
 use crate::inputs::MouseLookState;
-use crate::character::CharacterMotionConfigForPlatformerExample;
+use crate::character::CharacterFpsMotionConfig;
 
 use std::f32::consts::PI;
 use bevy::{
@@ -136,7 +136,7 @@ fn setup_water_plane(
 
 fn update_water_camera_sync(
     mouse_look: Res<MouseLookState>,
-    mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample), Without<WaterCamera>>,
+    mover_query: Query<(&Transform, &CharacterFpsMotionConfig), Without<WaterCamera>>,
     mut query: Query<&mut Transform, With<WaterCamera>>,
 ) {
     let (mover_transform, _mover) = mover_query.single();

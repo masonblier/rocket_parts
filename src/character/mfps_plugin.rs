@@ -35,7 +35,7 @@ impl Plugin for CharacterFpsPlugin {
 }
 
 #[derive(Component)]
-pub struct CharacterMotionConfigForPlatformerExample {
+pub struct CharacterFpsMotionConfig {
     pub speed: f32,
     pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,
@@ -62,7 +62,7 @@ fn setup_player(
     cmd.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_1));
     cmd.insert(TnuaRapier3dIOBundle::default());
     cmd.insert(TnuaControllerBundle::default());
-    cmd.insert(CharacterMotionConfigForPlatformerExample {
+    cmd.insert(CharacterFpsMotionConfig {
         speed: 10.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
@@ -104,7 +104,7 @@ fn apply_controls(
     // mut egui_context: EguiContexts,
     key_state: Res<KeyInputState>,
     mut query: Query<(
-        &CharacterMotionConfigForPlatformerExample,
+        &CharacterFpsMotionConfig,
         &mut TnuaController,
         &mut TnuaCrouchEnforcer,
         &mut TnuaProximitySensor,
@@ -379,7 +379,7 @@ pub struct AnimationsHandler {
 
 fn update_camera_sync(
     mouse_look: Res<MouseLookState>,
-    mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample), Without<MouseCamera>>,
+    mover_query: Query<(&Transform, &CharacterFpsMotionConfig), Without<MouseCamera>>,
     mut query: Query<&mut Transform, With<MouseCamera>>,
 ) {
     let (mover_transform, _mover) = mover_query.single();

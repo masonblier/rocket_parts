@@ -1,6 +1,6 @@
 use crate::inputs::MouseCamera;
 use crate::loading::TextureAssets;
-use crate::character::CharacterMotionConfigForPlatformerExample; 
+use crate::character::CharacterFpsMotionConfig; 
 use crate::game_state::GameState;
 
 use bevy::{
@@ -179,7 +179,7 @@ fn update_active_terrain(
     // mut terrain_state: ResMut<WorldTerrainState>,
     // mut commands: Commands, 
     // mut meshes: ResMut<Assets<Mesh>>,
-    mover_query: Query<(&Transform, &CharacterMotionConfigForPlatformerExample), Without<MouseCamera>>,
+    mover_query: Query<(&Transform, &CharacterFpsMotionConfig), Without<MouseCamera>>,
 ) {
     let (mover_transform, _mover) = mover_query.single();
    

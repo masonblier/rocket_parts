@@ -4,7 +4,6 @@ use crate::GameState;
 use crate::inputs::MouseCamera;
 
 use bevy::prelude::*;
-use bevy::input::mouse::MouseWheel;
 use bevy::gltf::Gltf;
 use bevy::utils::HashMap;
 
@@ -96,14 +95,14 @@ pub enum AnimationState {
 }
 
 const TOOL_STATES: [AnimationState; 3] = [
-    AnimationState::Idle,
     AnimationState::BuildToolHold,
     AnimationState::UnbuildToolHold,
+    AnimationState::Idle,
 ];
 const TOOL_OPEN_STATES: [AnimationState; 3] = [
-    AnimationState::Idle,
     AnimationState::BuildToolOpen,
     AnimationState::UnbuildToolOpen,
+    AnimationState::Idle,
 ];
 
 fn animate_mfps_arms(
@@ -111,7 +110,6 @@ fn animate_mfps_arms(
         &mut MfpsArmsAnimationsHandler,
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
     building_actions: Res<BuildingActionsState>,
     mouse_btn_input: Res<Input<MouseButton>>,
 
@@ -127,12 +125,7 @@ fn animate_mfps_arms(
         if building_actions.building_active {
             change_action = AnimationState::Idle;
         } else {
-            // check for tool change from mouse wheel scroll
-            for mwe in mouse_wheel_events.read() {
-                handler.active_index += mwe.y as i32;
-                if handler.active_index < 0 { handler.active_index = (TOOL_STATES.len() as i32) - 1};
-                if handler.active_index >= (TOOL_STATES.len() as i32) { handler.active_index = 0};
-            }
+            handler.active_index = (building_actions.active_index as i32).min(2);
             if handler.animation_state != TOOL_STATES[handler.active_index as usize] &&
             handler.animation_state != TOOL_OPEN_STATES[handler.active_index as usize] {
                 change_action = TOOL_STATES[handler.active_index as usize];

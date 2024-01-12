@@ -35,6 +35,10 @@ pub struct AudioAssets {
 
 #[derive(AssetCollection,Resource)]
 pub struct IconAssets {
+    #[asset(path = "textures/icon_hammer.png")]
+    pub hammer: Handle<Image>,
+    #[asset(path = "textures/icon_unbuild.png")]
+    pub unbuild: Handle<Image>,
     #[asset(path = "textures/icon_metal_frame.png")]
     pub metal_frame: Handle<Image>,
     #[asset(path = "textures/icon_fuel_tank.png")]

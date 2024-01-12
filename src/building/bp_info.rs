@@ -3,11 +3,13 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 use bevy_rapier3d::prelude::*;
 
+use crate::building::GridSolidity;
+
 #[derive(Clone,Default,Component)]
 pub struct BpSnapPoint {
     pub point: Vec3,
     pub normal: Vec3,
-    pub collider: Collider,
+    pub cuboid_dims: Vec3,
     pub filter: BpSnapFilter,
 }
 
@@ -23,6 +25,7 @@ pub struct BpInfo {
     pub bottom: Vec3,
     pub collider: Collider,
     pub snap: Vec<BpSnapPoint>,
+    pub solidity: GridSolidity,
 }
 
 #[derive(Clone,Resource)]
@@ -38,37 +41,37 @@ impl Default for BpInfos {
             BpSnapPoint {
                 point: Vec3::Y/2.,
                 normal: Vec3::Y,
-                collider: Collider::cuboid(0.4, 0.1, 0.4),
+                cuboid_dims: Vec3::new(0.8, 0.2, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: -Vec3::Y/2.,
                 normal: -Vec3::Y,
-                collider: Collider::cuboid(0.4, 0.1, 0.4),
+                cuboid_dims: Vec3::new(0.8, 0.2, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: Vec3::X/2.,
                 normal: Vec3::X,
-                collider: Collider::cuboid(0.1, 0.4, 0.4),
+                cuboid_dims: Vec3::new(0.2, 0.8, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: -Vec3::X/2.,
                 normal: -Vec3::X,
-                collider: Collider::cuboid(0.1, 0.4, 0.4),
+                cuboid_dims: Vec3::new(0.2, 0.8, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: Vec3::Z/2.,
                 normal: Vec3::Z,
-                collider: Collider::cuboid(0.4, 0.4, 0.1),
+                cuboid_dims: Vec3::new(0.8, 0.8, 0.2),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: -Vec3::Z/2.,
                 normal: -Vec3::Z,
-                collider: Collider::cuboid(0.4, 0.4, 0.1),
+                cuboid_dims: Vec3::new(0.8, 0.8, 0.2),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
         ];
@@ -77,13 +80,13 @@ impl Default for BpInfos {
             BpSnapPoint {
                 point: Vec3::Y/2.,
                 normal: Vec3::Y,
-                collider: Collider::cuboid(0.4, 0.1, 0.4),
+                cuboid_dims: Vec3::new(0.8, 0.2, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
             BpSnapPoint {
                 point: -Vec3::Y/2.,
                 normal: -Vec3::Y,
-                collider: Collider::cuboid(0.4, 0.1, 0.4),
+                cuboid_dims: Vec3::new(0.8, 0.2, 0.8),
                 filter: BpSnapFilter::HalfMeterBlocks,
             },
         ];
@@ -93,21 +96,25 @@ impl Default for BpInfos {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cuboid(0.5, 0.5, 0.5),
                 snap: hm_all.clone(),
+                solidity: GridSolidity::Leaky,
             }),
             ("fuel_tank".to_string(), BpInfo {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cylinder(0.5, 0.5),
                 snap: hm_tank.clone(),
+                solidity: GridSolidity::Leaky,
             }),
             ("thruster".to_string(), BpInfo {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cylinder(0.5, 0.5),
-                snap: hm_tank.clone(),
+                snap: vec![hm_tank[0].clone()],
+                solidity: GridSolidity::Leaky,
             }),
             ("nose_cone".to_string(), BpInfo {
                 bottom: -Vec3::Y/2.,
                 collider: Collider::cone(0.5, 0.5),
                 snap: vec![],
+                solidity: GridSolidity::Leaky,
             }),
         ].into_iter());
 
