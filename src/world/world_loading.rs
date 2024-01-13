@@ -14,7 +14,7 @@ pub struct WorldLoadingState {
     animatable_scenes: HashMap<String, InstanceId>,
     inited: bool,
     done: bool,
-    build_kit_preload_ent: Option<Entity>,
+    pub build_kit_preload_ent: Option<Entity>,
 }
 
 
@@ -59,36 +59,23 @@ fn setup_world_init(
     // preload build-kit gltf
     world_loading.build_kit_preload_ent = Some(
         commands.spawn(SceneBundle {
-            scene: assets_gltf.get(&world_props.building_kit).unwrap().scenes[0].clone(),
-            transform: Transform::from_translation(1000. * Vec3::Y),
+            scene: assets_gltf.get(&world_props.building_kit).unwrap().named_scenes["metal_frame_bp"].clone(),
+            transform: Transform::from_translation(-1000. * Vec3::Y),
             ..Default::default()
         }).id());
 }
 
 fn update_world_init(
-    mut commands: Commands,
     mut state: ResMut<NextState<GameState>>,
     mut world_loading: ResMut<WorldLoadingState>,
     world_state: Res<WorldState>,
 ) {
-    if let Some(ent) = world_loading.build_kit_preload_ent {
-        if commands.get_entity(ent).is_none() {
-            return;
-        }
-    } else {
-        return;
-    }
-
     if !world_loading.inited {
         world_loading.inited = true;
         if world_state.active_world == "credits" {
             state.set(GameState::Credits);
         } else {
             state.set(GameState::WorldLoading);
-        }
-
-        if let Some(ent) = world_loading.build_kit_preload_ent {
-            commands.entity(ent).despawn_recursive();
         }
     }
 }

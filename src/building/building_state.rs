@@ -8,16 +8,20 @@ use crate::building::{BpInfo,BpInfos,BpSnapPoint,BpSnapsEvent,BpSnapsRepeatEvent
     BuildingToolbarPlugin,BUILD_DIST};
 use crate::props::ThrusterInteractable;
 use crate::character::CharacterFpsMotionConfig;
+use crate::world::WorldLoadingState;
 
 use bevy::{prelude::*, gltf::Gltf};
 use bevy_rapier3d::prelude::*;
 
+const SNAP_DELAY: f32 = 0.3;
 
 // system state
 #[derive(Default, Resource)]
 pub struct BuildingState {
     pub active_index: usize,
     pub shown_bp_entity: Option<Entity>,
+    cast_result: BpCastResult,
+    last_cast_time: Timer,
 }
 
 pub struct BuildingStatePlugin;
@@ -43,15 +47,11 @@ fn update_building_state(
     mut commands: Commands,
     assets_gltf: Res<Assets<Gltf>>,
     world_props: Res<WorldProps>,
+    mut world_loading: ResMut<WorldLoadingState>,
     mouse_btn_input: Res<Input<MouseButton>>,
     mut building_state: ResMut<BuildingState>,
     building_actions: Res<BuildingActionsState>,
-    mouse_look: Res<MouseLookState>,
-    mover_query: Query<(&Transform, &CharacterFpsMotionConfig)>,
-    rapier_context: Res<RapierContext>,
     infos: Res<BpInfos>,
-    snaps_query: Query<&BpSnapPoint>,
-    gsp_query: Query<&GridSnapPoint>,
     gb_query: Query<&GridBlock>,
     mut snaps_events: EventWriter<BpSnapsEvent>,
     mut transforms_query: Query<(&mut Transform, Without<CharacterFpsMotionConfig>)>,    
@@ -62,51 +62,45 @@ fn update_building_state(
     if !building_actions.building_active {
         // hide bp model if still shown
         if let Some(shown_bp_entity) = building_state.shown_bp_entity {
-            commands.entity(shown_bp_entity).despawn_recursive();
+            commands.entity(shown_bp_entity).insert(Visibility::Hidden);
             building_state.shown_bp_entity = None;
         }
         
         return;
     }
 
-    // check for bp index change from BuildingActionsState
-    if building_state.active_index != (building_actions.active_index as usize) {
-        building_state.active_index = building_actions.active_index as usize;
-        if let Some(shown_bp_entity) = building_state.shown_bp_entity {
-            commands.entity(shown_bp_entity).despawn_recursive();
-            building_state.shown_bp_entity = None;
-        }
-    }
-
-
     // get projected position/rotation from collision raycast
-    let (mover_transform, _mover) = mover_query.single();
-    let scene_name = &building_kit_names[building_state.active_index];
+    let scene_name = &building_kit_names[building_actions.active_index];
     let bp_info = infos.bps[&scene_name.to_string()].clone();
-    let cast_result = cast_build_shape(
-        mouse_look.forward, mover_transform, 
-        &bp_info, &rapier_context, snaps_query, &gsp_query, &gb_query,
-        &mut transforms_query, building_actions.active_rotation,
-    );
-    let target_transform = cast_result.1;
+    let grid_transform = building_state.cast_result.grid_transform;
 
     // show bp model if not shown
-    if building_state.shown_bp_entity.is_none() {
-        let bp_scene_name = building_kit_names[building_state.active_index].to_owned() + "_bp";
-        building_state.shown_bp_entity = 
+    let bp_scene_name: String = scene_name.to_owned() + "_bp";
+    if world_loading.build_kit_preload_ent.is_none() {
+        world_loading.build_kit_preload_ent = 
             spawn_gltf_instance(bp_scene_name.as_str(), 
-                &mut commands, &assets_gltf, &world_props, target_transform);
+                &mut commands, &assets_gltf, &world_props, grid_transform);
+    }
+    commands.entity(world_loading.build_kit_preload_ent.unwrap()).insert(Visibility::Visible);
+    building_state.shown_bp_entity = world_loading.build_kit_preload_ent;
+
+    // update selected bp scene
+    if building_actions.active_index != building_state.active_index {
+        if let Some(gltf) = assets_gltf.get(&world_props.building_kit) {
+            commands.entity(world_loading.build_kit_preload_ent.unwrap()).insert(gltf.named_scenes[&bp_scene_name].clone());
+        }
+        building_state.active_index = building_actions.active_index;
     }
 
     if mouse_btn_input.just_pressed(MouseButton::Left) {
         let scene_name = &building_kit_names[building_state.active_index];
         if let Some(gltf) = assets_gltf.get(&world_props.building_kit) {
             let (grid_entity, _grid_transform) = find_or_create_grid(
-                &mut commands, cast_result.3, target_transform, &mut transforms_query);
+                &mut commands, building_state.cast_result.grid_entity, grid_transform, &mut transforms_query);
 
             // insert solid gltf entity, colliders
-            let local_translation = cast_result.2.translation;
-            let rot_quat = cast_result.2.rotation;
+            let local_translation = building_state.cast_result.local_transform.translation;
+            let rot_quat = building_state.cast_result.local_transform.rotation;
             let sb = SceneBundle {
                 scene: gltf.named_scenes[scene_name].clone(),
                 transform: Transform::from_translation(local_translation).with_rotation(rot_quat),
@@ -141,7 +135,8 @@ fn update_building_state(
 }
 
 fn update_building_bp_transform(
-    building_state: ResMut<BuildingState>,
+    time: Res<Time>,
+    mut building_state: ResMut<BuildingState>,
     building_actions: Res<BuildingActionsState>,
     infos: Res<BpInfos>,
     mouse_look: Res<MouseLookState>,
@@ -151,21 +146,32 @@ fn update_building_bp_transform(
     snaps_query: Query<&BpSnapPoint>,
     gsp_query: Query<&GridSnapPoint>,
     gb_query: Query<&GridBlock>,
-) {    
+) {
+    // debounce snap movement
+    building_state.last_cast_time.tick(time.delta());
+    if !building_state.last_cast_time.finished() {
+        return;
+    }
+    
     let building_kit_names = infos.bps.keys().collect::<Vec<&String>>();
 
-    // todo raycast
+    // raycast
     if let Some(shown_bp_entity) = building_state.shown_bp_entity {
         let (mover_transform, _mover) = mover_query.single();
         let scene_name = building_kit_names[building_state.active_index];
         let bp_info = &infos.bps[&scene_name.to_string()];
-        let cast_result = cast_build_shape(
+        building_state.cast_result = cast_build_shape(
             mouse_look.forward, mover_transform, 
             bp_info, &rapier_context, snaps_query, &gsp_query, &gb_query,
             &mut transforms_query, building_actions.active_rotation,
         );
         if let Ok(mut bp_transform) = transforms_query.get_mut(shown_bp_entity) {
-            bp_transform.0.clone_from(&cast_result.1.mul_transform(cast_result.2));
+            bp_transform.0.clone_from(&building_state.cast_result.grid_transform.mul_transform(
+                building_state.cast_result.local_transform));
+        }
+        // delay next cast if snapped to snap point
+        if building_state.cast_result.snapped {
+            building_state.last_cast_time = Timer::from_seconds(SNAP_DELAY, TimerMode::Once);
         }
     }
 }
@@ -190,6 +196,21 @@ fn spawn_gltf_instance(
     }
 }
 
+#[derive(Default)]
+struct BpCastResult {
+    snapped: bool,
+    grid_transform: Transform, 
+    local_transform: Transform, 
+    grid_entity: Option<Entity>,
+}
+impl BpCastResult {
+    fn new(snapped: bool, grid_transform: Transform, local_transform: Transform, grid_entity: Option<Entity>) -> Self {
+        Self {
+            snapped, grid_transform, local_transform, grid_entity
+        }
+    }
+}
+
 fn cast_build_shape(
     // mut world_state: ResMut<WorldState>,
     // mover_parent_query: Query<&GlobalTransform, With<MoverParent>>,
@@ -202,7 +223,7 @@ fn cast_build_shape(
     gb_query: &Query<&GridBlock>,
     transforms_query: &mut Query<(&mut Transform, Without<CharacterFpsMotionConfig>)>,
     local_rot: Quat,  
-) -> (Option<Entity>, Transform, Transform, Option<Entity>) {
+) -> BpCastResult {
     // get interactable ray from player state
     let mover_pos = mover_transform.translation + 0.4 * Vec3::Y;
     // default transform of item (in new grid)
@@ -219,7 +240,8 @@ fn cast_build_shape(
         // snap to grid block
         if let Some(grid_entity) = snap_result.grid_entity {
             if let Ok((grid_transform, _)) = transforms_query.get(grid_entity) {
-                return (snap_result.snap_entity, 
+                return BpCastResult::new(
+                    true,
                     grid_transform.clone(),
                     snap_result.local_transform, 
                     snap_result.grid_entity,
@@ -228,7 +250,8 @@ fn cast_build_shape(
         }
 
         // snap to world
-        return (snap_result.snap_entity, 
+        return BpCastResult::new(
+            false,
             snap_result.local_transform,
             rot_in_place_transform,
             None,
@@ -238,7 +261,8 @@ fn cast_build_shape(
     // no snap
     let cast_end = Transform::from_translation(mover_transform.translation + 
         mouse_forward * BUILD_DIST - bp_info.bottom);
-    return (None, 
+    return BpCastResult::new(
+        false,
         cast_end,
         rot_in_place_transform,
         None,

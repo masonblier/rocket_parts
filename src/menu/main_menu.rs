@@ -159,6 +159,8 @@ fn setup_menu(
         window.cursor.grab_mode = CursorGrabMode::None;
         window.cursor.visible = true;
         cursor_lock_controls.enabled = false;
+        // prevent most default browser keyboard interactions
+        window.prevent_default_event_handling = true;
     }
 }
 

@@ -106,8 +106,8 @@ fn click_play_button(
                 next_state.set(GameState::Running);
                 // request cursor lock
                 let mut window = windows.single_mut();
-                window.cursor.grab_mode = CursorGrabMode::None;
-                window.cursor.visible = true;
+                window.cursor.grab_mode = CursorGrabMode::Locked;
+                window.cursor.visible = false;
                 cursor_lock_controls.enabled = true;
             }
             Interaction::Hovered => {
