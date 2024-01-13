@@ -29,7 +29,7 @@ impl Plugin for BuildingStatePlugin {
         .add_event::<BpSnapsEvent>()
         .add_event::<BpSnapsRepeatEvent>()
         .add_plugins((BuildingToolbarPlugin::default(),))
-        // .add_systems(OnEnter(GameState::Running), setup_building_interactive_states)
+        // .add_systems(OnEnter(GameState::WorldLoading), setup_building_interactive_states)
         .add_systems(Update, (
             update_building_state.run_if(in_state(GameState::Running)),
             update_building_bp_transform.run_if(in_state(GameState::Running)),

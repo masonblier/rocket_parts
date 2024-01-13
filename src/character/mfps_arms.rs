@@ -3,9 +3,10 @@ use crate::loading::WorldProps;
 use crate::GameState;
 use crate::inputs::MouseCamera;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, render::view::NoFrustumCulling};
 use bevy::gltf::Gltf;
 use bevy::utils::HashMap;
+use bevy_scene_hook::{HookedSceneBundle,SceneHook};
 
 #[derive(Default)]
 pub struct CharacterFpsArmsPlugin;
@@ -14,7 +15,7 @@ pub struct CharacterFpsArmsPlugin;
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for CharacterFpsArmsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Running), setup_mfps_arms);
+        app.add_systems(OnEnter(GameState::WorldLoading), setup_mfps_arms);
         app.add_systems(Update, mfps_arms_animation_patcher_system.run_if(in_state(GameState::Running)));
         app.add_systems(Update, animate_mfps_arms.run_if(in_state(GameState::Running)));
 
@@ -40,10 +41,18 @@ fn setup_mfps_arms(
     camera_query: Query<Entity, With<MouseCamera>>,
 ) {
     let camera_entity = camera_query.single();
-    commands.spawn(SceneBundle {
-        scene: world_props.mfps_arms_scene_handle.clone(),
-        transform: Transform::from_xyz(0., -1.6, -0.2).with_scale(Vec3::splat(0.11)),
-        ..Default::default()
+    commands.spawn(HookedSceneBundle {
+        scene: SceneBundle {
+            scene: world_props.mfps_arms_scene_handle.clone(),
+            transform: Transform::from_xyz(0., -1.6, -0.2),
+            ..Default::default()
+        },
+        hook: SceneHook::new(|entity, ent_commands| {
+            if entity.get::<Handle<Mesh>>().is_some() {
+                println!("mesh found!, {:?}", entity.id());
+                ent_commands.insert(NoFrustumCulling::default());
+             }
+        }),
     })
     .insert(MfpsArmsSceneHandler {
         names_from: world_props.mfps_arms_handle.clone(),

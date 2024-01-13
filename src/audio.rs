@@ -10,7 +10,7 @@ pub struct InternalAudioPlugin;
 impl Plugin for InternalAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AudioPlugin)
-            .add_systems(OnEnter(GameState::Running), start_audio)
+            .add_systems(OnEnter(GameState::WorldLoading), start_audio)
             // .add_systems(
             //     Update,
             //     control_flying_sound

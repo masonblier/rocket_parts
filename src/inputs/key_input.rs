@@ -26,6 +26,9 @@ impl Default for KeyInputMap {
             key_right: KeyCode::D,
             key_jump: KeyCode::Space,
             key_run: KeyCode::ShiftLeft,
+            #[cfg(target_arch = "wasm32")]
+            key_crouch: KeyCode::AltLeft,
+            #[cfg(not(target_arch = "wasm32"))]
             key_crouch: KeyCode::ControlLeft,
             key_fly: KeyCode::F,
             key_toggleview: KeyCode::T,

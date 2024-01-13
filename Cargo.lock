@@ -329,6 +329,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-scene-hook"
+version = "9.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83e433958378686e72e82184650a54a64055f7e498e446edc32b5a157f926d7d"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy-tnua"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3119,6 +3128,7 @@ name = "rocket_parts_game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-scene-hook",
  "bevy-tnua",
  "bevy-tnua-rapier3d",
  "bevy_asset_loader",

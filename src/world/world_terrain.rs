@@ -34,7 +34,7 @@ impl Plugin for WorldTerrainPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(WorldTerrainState::default());
         app.add_plugins((MaterialPlugin::<ExtendedMaterial<StandardMaterial, ArrayTextureMaterial>>::default(),));
-        app.add_systems(OnEnter(GameState::Running), setup_active_terrain);
+        app.add_systems(OnEnter(GameState::WorldLoading), setup_active_terrain);
         app.add_systems(Update, update_active_terrain.run_if(in_state(GameState::Running)));
     }
 }

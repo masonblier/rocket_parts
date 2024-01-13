@@ -1,7 +1,7 @@
-use crate::loading::{LoadingUiEvent,LoadingUiEventAction};
+use crate::loading::{LoadingUiEvent,LoadingUiEventAction,WorldProps};
 use crate::game_state::GameState;
 use crate::world::WorldState;
-use bevy::prelude::*;
+use bevy::{prelude::*, gltf::Gltf};
 use bevy::scene::InstanceId;
 use std::collections::HashMap;
 use bevy_rapier3d::prelude::*;
@@ -14,6 +14,7 @@ pub struct WorldLoadingState {
     animatable_scenes: HashMap<String, InstanceId>,
     inited: bool,
     done: bool,
+    build_kit_preload_ent: Option<Entity>,
 }
 
 
@@ -36,10 +37,11 @@ impl Plugin for WorldLoadingPlugin {
 
 fn setup_world_init(
     mut commands: Commands,
+    world_props: Res<WorldProps>,
     mut world_loading: ResMut<WorldLoadingState>,
     mut loading_ui_events: EventWriter<LoadingUiEvent>,
-    world_ents: Query<(Entity,With<WorldEntity>)>,//Without<Mover>)>,
-    // mover_ents: Query<(Entity,With<Mover>,Without<WorldEntity>)>,
+    world_ents: Query<(Entity,With<WorldEntity>)>,
+    assets_gltf: Res<Assets<Gltf>>,
 ) {
     world_loading.inited = false;
 
@@ -53,22 +55,40 @@ fn setup_world_init(
     for (ent, _) in world_ents.iter() {
         commands.entity(ent).despawn_recursive();
     }
-    // for (ent, _, _) in mover_ents.iter() {
-    //     commands.entity(ent).despawn_recursive();
-    // }
+
+    // preload build-kit gltf
+    world_loading.build_kit_preload_ent = Some(
+        commands.spawn(SceneBundle {
+            scene: assets_gltf.get(&world_props.building_kit).unwrap().scenes[0].clone(),
+            transform: Transform::from_translation(1000. * Vec3::Y),
+            ..Default::default()
+        }).id());
 }
 
 fn update_world_init(
+    mut commands: Commands,
     mut state: ResMut<NextState<GameState>>,
     mut world_loading: ResMut<WorldLoadingState>,
     world_state: Res<WorldState>,
 ) {
+    if let Some(ent) = world_loading.build_kit_preload_ent {
+        if commands.get_entity(ent).is_none() {
+            return;
+        }
+    } else {
+        return;
+    }
+
     if !world_loading.inited {
         world_loading.inited = true;
         if world_state.active_world == "credits" {
             state.set(GameState::Credits);
         } else {
             state.set(GameState::WorldLoading);
+        }
+
+        if let Some(ent) = world_loading.build_kit_preload_ent {
+            commands.entity(ent).despawn_recursive();
         }
     }
 }

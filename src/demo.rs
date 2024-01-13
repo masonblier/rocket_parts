@@ -25,7 +25,7 @@ impl Plugin for DemoPlugin {
     fn build(&self, app: &mut App) {
         // app.add_plugins(PhysicsPlugins::default());
 
-        // app.add_systems(OnEnter(GameState::Running), setup_level)
+        // app.add_systems(OnEnter(GameState::WorldLoading), setup_level)
             // .add_systems(Update, move_player.run_if(in_state(GameState::Playing)))
             ;
         // app.add_systems(Update, update_rapier_physics_active);

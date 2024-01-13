@@ -39,7 +39,7 @@ pub fn update_building_actions_state(
 
     let mut next_index = state.active_index as i32;
     for mwe in mouse_wheel_events.read() {
-        next_index += mwe.y as i32;
+        next_index += (mwe.y/mwe.y) as i32;
         if next_index < 0 { next_index = (infos.toolbar_order.len() as i32) - 1};
         if next_index >= (infos.toolbar_order.len() as i32) { next_index = 0};
     }

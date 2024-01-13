@@ -30,7 +30,6 @@ pub struct BpSnapsRepeatEvent(BpSnapsEvent);
 pub fn update_building_bp_snaps(
     mut commands: Commands,
     mut grids_query: Query<&mut Grid>,
-    // snaps_query: Query<(&GlobalTransform, &BpSnapPoint)>,
     mut snaps_events: EventReader<BpSnapsEvent>,
     mut snaps_events_out: EventWriter<BpSnapsRepeatEvent>,
 ) {

@@ -59,7 +59,7 @@ impl Plugin for MouseInputPlugin {
         app.init_resource::<MouseLookState>();
         app.init_resource::<MouseSettings>();
 
-        app.add_systems(OnEnter(GameState::Running), setup_mouse_inputs);
+        app.add_systems(OnEnter(GameState::WorldLoading), setup_mouse_inputs);
         app.add_systems(Update, update_cursor_lock.run_if(in_state(GameState::Running)));
         app.add_systems(Update, update_cursor_lock_wasm_running.run_if(in_state(GameState::Running)));
         app.add_systems(Update, input_to_look.run_if(in_state(GameState::Running)));
@@ -132,7 +132,6 @@ pub fn update_cursor_lock(
 
 pub fn input_to_look(
     mut mouse_motion_events: EventReader<MouseMotion>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
     mut mouse_look: ResMut<MouseLookState>,
     settings: Res<MouseSettings>,
     cursor_lock: Res<CursorLockState>,
@@ -140,10 +139,6 @@ pub fn input_to_look(
     let mut delta = Vec2::ZERO;
     for motion in mouse_motion_events.read() {
         delta -= motion.delta;
-    }
-    let mut wheel_delta_y = 0.0;
-    for wheel_motion in mouse_wheel_events.read() {
-        wheel_delta_y -= wheel_motion.y;
     }
     if !cursor_lock.enabled {
         return;
@@ -174,5 +169,4 @@ pub fn input_to_look(
         mouse_look.right = rotation * Vec3::X;
         mouse_look.up = rotation * Vec3::Y;
     }
-    mouse_look.zoom += wheel_delta_y * settings.zoom_sensitivity;
 }

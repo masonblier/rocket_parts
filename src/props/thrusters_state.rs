@@ -34,7 +34,7 @@ impl Plugin for ThrustersStatePlugin {
     fn build(&self, app: &mut App) {
         app
             .insert_resource(ThrustersState::default())
-            // .add_systems(OnEnter(GameState::Running), setup_thrusters_state)
+            // .add_systems(OnEnter(GameState::WorldLoading), setup_thrusters_state)
             .add_systems(Update, (
                 update_thursters_state.run_if(in_state(GameState::Running)),));
     }

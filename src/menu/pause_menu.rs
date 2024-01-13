@@ -4,7 +4,7 @@ use crate::loading::FontAssets;
 use crate::menu::ButtonColors;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
-// use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 // system state
 #[derive(Default, Resource)]
@@ -35,14 +35,14 @@ fn enter_pause_menu(
     mut commands: Commands,
     mut pause_menu_state: ResMut<PauseMenuState>,
     font_assets: Res<FontAssets>,
-    // mut rapier_conf: ResMut<RapierConfiguration>,
+    mut rapier_conf: ResMut<RapierConfiguration>,
     mut cursor_lock_controls: ResMut<CursorLockState>,
     mut windows: Query<&mut Window>,
 ) {
     // pause menu ui
     let button_colors = ButtonColors::default();
     pause_menu_state.ui_entity = Some(commands
-        .spawn(ButtonBundle {
+        .spawn((ButtonBundle {
             style: Style {
                 width: Val::Px(160.0), 
                 height: Val::Px(50.0),
@@ -53,7 +53,9 @@ fn enter_pause_menu(
             },
             background_color: button_colors.normal.into(),
             ..Default::default()
-        })
+        },
+        ButtonColors::default(),
+        ChangeState(GameState::Paused)))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
@@ -73,7 +75,7 @@ fn enter_pause_menu(
         }).id());
 
     // pause physics
-    // rapier_conf.physics_pipeline_active = false;
+    rapier_conf.physics_pipeline_active = false;
 
     // exit cursor lock
     let mut window = windows.single_mut();
@@ -121,7 +123,7 @@ fn click_play_button(
 fn exit_pause_menu(
     mut commands: Commands,
     pause_menu: Res<PauseMenuState>,
-    // mut rapier_conf: ResMut<RapierConfiguration>,
+    mut rapier_conf: ResMut<RapierConfiguration>,
 ) {
     // despawn ui
     if let Some(ui_entity) = pause_menu.ui_entity {
@@ -129,5 +131,5 @@ fn exit_pause_menu(
     }
 
     // resume physics
-    // rapier_conf.physics_pipeline_active = true;
+    rapier_conf.physics_pipeline_active = true;
 }

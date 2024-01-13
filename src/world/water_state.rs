@@ -19,7 +19,7 @@ impl Plugin for WaterStatePlugin {
     fn build(&self, app: &mut App) {
         app
         .add_plugins((MaterialPlugin::<WaterMaterial>::default(),))
-        .add_systems(OnEnter(GameState::Running), setup_water_plane)
+        .add_systems(OnEnter(GameState::WorldLoading), setup_water_plane)
         .add_systems(Update, 
             update_water_camera_sync.run_if(in_state(GameState::Running)))
             ;

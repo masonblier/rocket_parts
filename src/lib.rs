@@ -29,6 +29,7 @@ use bevy::app::App;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use bevy_scene_hook::HookPlugin;
 use bevy_tnua::prelude::*;
 use bevy_tnua_rapier3d::*;
 use bevy_tnua::control_helpers::TnuaCrouchEnforcerPlugin;
@@ -42,6 +43,7 @@ impl Plugin for GamePlugin {
             TnuaRapier3dPlugin,
             TnuaControllerPlugin,
             TnuaCrouchEnforcerPlugin,
+            HookPlugin,
         ))
         .add_plugins((
             LoadingUiStatePlugin,

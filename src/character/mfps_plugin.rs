@@ -26,7 +26,7 @@ pub struct Player;
 impl Plugin for CharacterFpsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((CharacterFpsArmsPlugin::default(),));
-        app.add_systems(OnEnter(GameState::Running), setup_player);
+        app.add_systems(OnEnter(GameState::WorldLoading), setup_player);
         app.add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet).run_if(in_state(GameState::Running)));
         // app.add_systems(Update, animation_patcher_system.run_if(in_state(GameState::Running)));
         // app.add_systems(Update, animate.run_if(in_state(GameState::Running)));
