@@ -73,13 +73,24 @@ fn tex_fragment(
     mesh: VertexOutput,
     is_front: bool,
 ) -> vec4<f32> {
-    let layer = i32(mesh.world_position.x) & 0x3;
+    var layer = 0x3;
+    if (mesh.world_normal.y < 0.7) {
+        layer = 0x2;
+    } else {
+        if (mesh.world_position.y > -70.0) {
+            layer = 0x1;
+        } else if (mesh.world_position.y > -90.0) {
+            layer = 0x0;
+        }
+    }
 
     // Prepare a 'processed' StandardMaterial by sampling all textures to resolve
     // the material members
     var pbr_input: PbrInput = pbr_input_new();
 
-    pbr_input.material.base_color = textureSample(my_array_texture, my_array_texture_sampler, mesh.uv, layer);
+    let mesh_uv = vec2<f32>(abs(mesh.world_position.x * 0.1) % 1.0, abs(mesh.world_position.z * 0.1) % 1.0);
+
+    pbr_input.material.base_color = textureSample(my_array_texture, my_array_texture_sampler, mesh_uv, layer);
 #ifdef VERTEX_COLORS
     pbr_input.material.base_color = pbr_input.material.base_color * mesh.color;
 #endif
@@ -106,7 +117,7 @@ fn tex_fragment(
         mesh.world_tangent,
 #endif
 #endif
-        mesh.uv,
+        mesh_uv,
         view.mip_bias,
     );
     pbr_input.V = fns::calculate_view(mesh.world_position, pbr_input.is_orthographic);

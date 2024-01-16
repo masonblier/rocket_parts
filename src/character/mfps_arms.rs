@@ -3,7 +3,7 @@ use crate::loading::WorldProps;
 use crate::GameState;
 use crate::inputs::MouseCamera;
 
-use bevy::{prelude::*, render::view::NoFrustumCulling};
+use bevy::{prelude::*, pbr::NotShadowReceiver, render::view::NoFrustumCulling};
 use bevy::gltf::Gltf;
 use bevy::utils::HashMap;
 use bevy_scene_hook::{HookedSceneBundle,SceneHook};
@@ -49,15 +49,29 @@ fn setup_mfps_arms(
         },
         hook: SceneHook::new(|entity, ent_commands| {
             if entity.get::<Handle<Mesh>>().is_some() {
-                println!("mesh found!, {:?}", entity.id());
                 ent_commands.insert(NoFrustumCulling::default());
-             }
+            }
         }),
     })
     .insert(MfpsArmsSceneHandler {
         names_from: world_props.mfps_arms_handle.clone(),
     })
     .set_parent(camera_entity)
+    ;
+
+    // skyball
+    commands.spawn(HookedSceneBundle {
+        scene: SceneBundle {
+            scene: world_props.skyball.clone(),
+            transform: Transform::from_scale(Vec3::splat(1000.)),
+            ..Default::default()
+        },
+        hook: SceneHook::new(|entity, ent_commands| {
+            if entity.get::<Handle<Mesh>>().is_some() {
+                ent_commands.insert(NotShadowReceiver::default());
+            }
+        }),
+    })
     ;
 }
 

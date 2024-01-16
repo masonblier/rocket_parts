@@ -14,6 +14,7 @@ pub struct WorldProps {
     pub mfps_arms_handle: Handle<Gltf>,
     pub mfps_arms_scene_handle: Handle<Scene>,
     
+    pub skyball: Handle<Scene>,
     pub building_kit: Handle<Gltf>,
 }
 
@@ -37,6 +38,7 @@ fn setup_scene_loading(
     world_props.mfps_arms_handle = asset_server.load("character/mfps_arms.glb");
     world_props.mfps_arms_scene_handle = asset_server.load("character/mfps_arms.glb#Scene0");
     
+    world_props.skyball = asset_server.load("props/skyball.glb#Scene0");
     world_props.building_kit = asset_server.load("props/building_kit.glb");
 }
 

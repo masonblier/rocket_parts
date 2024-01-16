@@ -39,7 +39,13 @@ impl IsosurfaceSource {
     pub fn heightfn(&self, x: f32, z: f32) -> f32 {
         let x = (self.chunkx as f32) + x;
         let z = (self.chunkz as f32) + z;
-        0.1 * (0.1 + x * 1.11).sin() + 0.01 * (x * 10.011).sin() + 0.1 * (0.1 + z * 1.31).sin() + 0.1 * (z * 1.0311).sin()
+        0.5 + 0.1 * (0.1 + x * 1.11).sin() + 
+            0.5 * ((x * 0.0911).sin() + (z * 0.0811).sin()) * 
+                (0.1 * (x * 10.011).sin() * (x * 1.0311).sin() + 
+                0.1 * (x * 9.3011).sin() * (x * 2.4311).sin() + 
+                0.1 * (z * 17.3011).sin() * (z * 1.9311).sin()) + 
+            0.1 * (0.1 + z * 1.31).sin() + 
+            0.1 * (z * 1.0311).sin()
     }
 }
 

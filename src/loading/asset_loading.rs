@@ -13,7 +13,7 @@ impl Plugin for AssetLoadingPlugin {
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, IconAssets>(GameState::AssetLoading)
-       .add_collection_to_loading_state::<_, TextureAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, TextureAssets>(GameState::AssetLoading)
         ;
     }
 }
@@ -54,7 +54,7 @@ pub struct TextureAssets {
     #[asset(path = "textures/bevy.png")]
     pub texture_bevy: Handle<Image>,
     
-    #[asset(path = "textures/array_texture.png")]
+    #[asset(path = "textures/terrain4.jpg")]
     pub texture_array: Handle<Image>,
 
     #[asset(path = "textures/explosion.png")]

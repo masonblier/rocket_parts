@@ -4,6 +4,8 @@ mod lights_state;
 pub use lights_state::*;
 mod sounds_state;
 pub use sounds_state::*;
+mod terrain_material;
+pub use terrain_material::*;
 mod water_state;
 pub use water_state::*;
 mod world_asset_loader;

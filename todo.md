@@ -1,10 +1,9 @@
 == todo
 
 - world terrain
-  - infinite chunks, sphere looping 
+  - fix lod1 texture uv bug
   - move physics origin on chunk move
-  - terrain texture per slope, biome, etc
-  - terrain lod
+  - terrain lod 2
 
 - flight seat
   - sit/unsit, fps_arms animation
