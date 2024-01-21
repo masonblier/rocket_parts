@@ -110,6 +110,7 @@ fn mfps_arms_animation_patcher_system(
 pub enum AnimationState {
     Init,
     Idle,
+    Seated,
     BuildToolOpen,
     BuildToolHold,
     BuildToolActive,
@@ -168,6 +169,12 @@ fn animate_mfps_arms(
                 AnimationState::Idle => {
                     player
                         .start(handler.animations["Idle"].clone_weak())
+                        .set_speed(1.0)
+                        .repeat();
+                }
+                AnimationState::Seated => {
+                    player
+                        .start(handler.animations["Seated"].clone_weak())
                         .set_speed(1.0)
                         .repeat();
                 }

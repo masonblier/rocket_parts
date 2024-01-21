@@ -14,6 +14,7 @@ pub struct KeyInputMap {
     pub key_crouch: KeyCode,
     pub key_fly: KeyCode,
     pub key_toggleview: KeyCode,
+    pub key_action_use: KeyCode,
     pub key_escape: KeyCode,
 }
 
@@ -30,8 +31,9 @@ impl Default for KeyInputMap {
             key_crouch: KeyCode::AltLeft,
             #[cfg(not(target_arch = "wasm32"))]
             key_crouch: KeyCode::ControlLeft,
-            key_fly: KeyCode::F,
+            key_fly: KeyCode::N,
             key_toggleview: KeyCode::T,
+            key_action_use: KeyCode::F,
             key_escape: KeyCode::Escape,
         }
     }
@@ -49,6 +51,7 @@ pub struct KeyInputState {
     pub up: bool,
     pub down: bool,
     pub jump: bool,
+    pub action_use: bool,
     pub toggle_fly: bool,
     pub toggle_view: bool,
 }
@@ -84,6 +87,7 @@ pub fn input_to_move(
     state.toggle_fly = cursor_lock.enabled && keyboard_input.just_pressed(input_map.key_fly);
     state.toggle_view = cursor_lock.enabled && keyboard_input.just_pressed(input_map.key_toggleview);
     state.jump = cursor_lock.enabled && keyboard_input.just_pressed(input_map.key_jump);
+    state.action_use = cursor_lock.enabled && keyboard_input.just_pressed(input_map.key_action_use);
 
     // update desired velocity from key states
     state.forward = cursor_lock.enabled && keyboard_input.pressed(input_map.key_forward);

@@ -58,6 +58,9 @@ pub fn update_building_actions_state(
     if keyboard_input.just_pressed(KeyCode::Key4) {
         state.active_index = 3;
     }
+    if keyboard_input.just_pressed(KeyCode::Key5) {
+        state.active_index = 4;
+    }
     
     // check thrusters toggles
     if keyboard_input.just_pressed(KeyCode::Z) {

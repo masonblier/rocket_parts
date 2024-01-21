@@ -116,6 +116,12 @@ impl Default for BpInfos {
                 snap: vec![],
                 solidity: GridSolidity::Leaky,
             }),
+            ("flight_seat".to_string(), BpInfo {
+                bottom: -Vec3::Y/2.,
+                collider: Collider::cone(0.5, 0.5),
+                snap: vec![],
+                solidity: GridSolidity::Leaky,
+            }),
         ].into_iter());
 
         let toolbar_order = vec![
@@ -123,6 +129,7 @@ impl Default for BpInfos {
             "fuel_tank".to_string(),
             "thruster".to_string(),
             "nose_cone".to_string(),
+            "flight_seat".to_string(),
         ];
 
         BpInfos { bps, toolbar_order }

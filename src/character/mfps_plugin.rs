@@ -18,8 +18,17 @@ use bevy_tnua_rapier3d::*;
 
 pub struct CharacterFpsPlugin;
 
+pub const CHARACTER_GROUP: Group = Group::GROUP_1;
+
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Component,Default)]
+pub struct MoverState {
+    pub seated_in_next: Option<Entity>,
+    pub seated_in: Option<Entity>,
+}
+
 
 /// This plugin handles player related stuff like movement
 /// Player logic is only active during the State `GameState::Playing`
@@ -30,6 +39,7 @@ impl Plugin for CharacterFpsPlugin {
         app.add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet).run_if(in_state(GameState::Running)));
         // app.add_systems(Update, animation_patcher_system.run_if(in_state(GameState::Running)));
         // app.add_systems(Update, animate.run_if(in_state(GameState::Running)));
+        app.add_systems(Update, update_mover_status.run_if(in_state(GameState::Running)));
         app.add_systems(Update, update_camera_sync.run_if(in_state(GameState::Running)));
     }
 }
@@ -59,10 +69,11 @@ fn setup_player(
     
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_1));
+    cmd.insert(CollisionGroups::new(CHARACTER_GROUP, CHARACTER_GROUP));
     cmd.insert(TnuaRapier3dIOBundle::default());
     cmd.insert(TnuaControllerBundle::default());
-    cmd.insert(CharacterFpsMotionConfig {
+    cmd.insert(MoverState::default());
+        cmd.insert(CharacterFpsMotionConfig {
         speed: 10.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
@@ -92,8 +103,8 @@ fn setup_player(
     // TODO
     // cmd.insert(LockedAxes::new().lock_rotation_x().lock_rotation_z());
     cmd.insert(CollisionGroups {
-        memberships: Group::GROUP_1,
-        filters: Group::GROUP_1,
+        memberships: CHARACTER_GROUP,
+        filters: CHARACTER_GROUP,
     });
     // cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     // cmd.insert(PlotSource::default());
@@ -150,7 +161,6 @@ fn apply_controls(
         mut air_actions_counter,
     ) in query.iter_mut()
     {
-        // println!("{}", ghost_sensor.iter().count());
         air_actions_counter.update(controller.as_mut());
 
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
@@ -376,6 +386,41 @@ pub struct AnimationsHandler {
 //         }
 //     }
 // }
+
+
+fn update_mover_status(
+    mut commands: Commands,
+    parents: Query<&Parent>,
+    transforms_query: Query<(&Transform, Without<CharacterFpsMotionConfig>)>,
+    mut mover_query: Query<(Entity, &mut Transform, &mut MoverState, With<CharacterFpsMotionConfig>)>,
+) {
+    for (mover_ent, mut mover_transform, mut mover_state, _) in mover_query.iter_mut() {
+        // state change
+        if mover_state.seated_in_next != mover_state.seated_in {
+            mover_state.seated_in = mover_state.seated_in_next;
+            let mut mover_cmds = commands.entity(mover_ent);
+            if mover_state.seated_in.is_none() {
+                mover_cmds.insert(TnuaToggle::Enabled);
+                mover_cmds.insert(Collider::capsule_y(0.5, 0.5));
+            } else {
+                mover_cmds.insert(TnuaToggle::Disabled);
+                mover_cmds.remove::<Collider>();
+            }
+        }
+        
+        if mover_state.seated_in.is_some() {
+            if let Ok((seat_transform,  _)) = transforms_query.get(mover_state.seated_in.unwrap()) {
+                if let Ok(seat_parent) = parents.get(mover_state.seated_in.unwrap()) {
+                    if let Ok(seat_parent_1) = parents.get(seat_parent.get()) {
+                        if let Ok((parent_transform,  _)) = transforms_query.get(seat_parent_1.get()) {    
+                            mover_transform.translation = parent_transform.mul_transform(*seat_transform).translation;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 fn update_camera_sync(
     mouse_look: Res<MouseLookState>,

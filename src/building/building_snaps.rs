@@ -3,6 +3,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::building::{BpInfo,BpSnapPoint,DiscreteVec3,Grid,GridBlock};
 use crate::character::CharacterFpsMotionConfig;
+use crate::world::WORLD_GROUP;
 
 pub const BUILD_DIST: f32 = 3.;
 pub const SNAPS_GROUP: Group = Group::GROUP_3;
@@ -90,7 +91,7 @@ pub fn insert_bp_snaps(
         })
             .insert(Collider::cuboid(snap.cuboid_dims.x, snap.cuboid_dims.y, snap.cuboid_dims.z))
             .insert(snap.clone())
-            .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_3))
+            .insert(CollisionGroups::new(SNAPS_GROUP, SNAPS_GROUP))
             .insert(GridSnapPoint { 
                 entity: grid_entity, 
                 collider: None, 
@@ -128,7 +129,7 @@ pub fn cast_snaps_ray(
     local_rot: Quat,  
 ) -> Option<BpSnapResult> {
     // cast ray against snapping colliders
-    let ray_groups = CollisionGroups::new(SNAPS_GROUP | Group::GROUP_2, SNAPS_GROUP | Group::GROUP_2);
+    let ray_groups = CollisionGroups::new(SNAPS_GROUP | WORLD_GROUP, SNAPS_GROUP | WORLD_GROUP);
     let ray_filter: QueryFilter<'_> = QueryFilter { groups: Some(ray_groups), ..Default::default()};
     if let Some((collided_entity, intersection)) = rapier_context.cast_ray_and_get_normal(
             cast_origin, mouse_forward, BUILD_DIST, true, ray_filter

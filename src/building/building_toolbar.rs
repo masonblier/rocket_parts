@@ -92,6 +92,10 @@ fn setup_building_toolbar(
             icon: Some(icon_assets.nose_cone.clone()),
             text: "Nose Cone".into(),
         },
+        ToolbarItem {
+            icon: Some(icon_assets.flight_seat.clone()),
+            text: "Flight Seat".into(),
+        },
     ];
 
     system_state.ui_entity = Some(commands

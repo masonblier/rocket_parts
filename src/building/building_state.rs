@@ -6,7 +6,7 @@ use crate::building::{BpInfo,BpInfos,BpSnapPoint,BpSnapsEvent,BpSnapsRepeatEvent
     find_or_create_grid,GridBlock,GridSnapPoint,
     update_building_bp_snaps,update_building_bp_snaps_repeats,cast_snaps_ray,
     BuildingToolbarPlugin,BUILD_DIST};
-use crate::props::ThrusterInteractable;
+use crate::props::{InteractableInfo,INTERACT_GROUP,ThrusterInteractable};
 use crate::character::CharacterFpsMotionConfig;
 use crate::world::WorldLoadingState;
 
@@ -114,6 +114,17 @@ fn update_building_state(
             });
             build_block.set_parent(grid_entity);
             // add block interactable extras
+            if scene_name == "flight_seat" {
+                build_block.with_children(|parent| {
+                    parent.spawn(SpatialBundle {
+                        transform: Transform::from_translation(local_translation).with_rotation(rot_quat),
+                        ..default()
+                    })
+                        .insert(InteractableInfo { hover_text: "Enter Flight Seat (F)".into() })
+                        .insert(bp_info.collider.clone())
+                        .insert(CollisionGroups::new(INTERACT_GROUP, INTERACT_GROUP));
+                });
+            }
             if scene_name == "thruster" {
                 build_block.insert(ThrusterInteractable { grid: Some(grid_entity) });
             }

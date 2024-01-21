@@ -47,6 +47,8 @@ pub struct IconAssets {
     pub nose_cone: Handle<Image>,
     #[asset(path = "textures/icon_thruster.png")]
     pub thruster: Handle<Image>,
+    #[asset(path = "textures/icon_flight_seat.png")]
+    pub flight_seat: Handle<Image>,
 }
 
 #[derive(AssetCollection,Resource)]

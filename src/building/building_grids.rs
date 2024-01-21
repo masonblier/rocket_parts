@@ -1,6 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier3d::prelude::*;
-use crate::character::CharacterFpsMotionConfig;
+use crate::character::{CharacterFpsMotionConfig,CHARACTER_GROUP};
+use crate::world::WORLD_GROUP;
 
 
 #[derive(Default,Clone)]
@@ -50,7 +51,7 @@ pub fn find_or_create_grid(
             .insert(Grid::default())
             .insert(RigidBody::Dynamic)
             .insert(ExternalForce { ..default() })
-            .insert(CollisionGroups::new(Group::GROUP_1 | Group::GROUP_2, Group::GROUP_1 | Group::GROUP_2))
+            .insert(CollisionGroups::new(CHARACTER_GROUP | WORLD_GROUP, CHARACTER_GROUP | WORLD_GROUP))
             .id(),
             target_transform,
         )

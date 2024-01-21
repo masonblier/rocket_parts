@@ -1,5 +1,5 @@
 use crate::inputs::MouseCamera;
-use crate::character::CharacterFpsMotionConfig; 
+use crate::character::{CharacterFpsMotionConfig,CHARACTER_GROUP}; 
 use crate::game_state::GameState;
 use crate::world::{CHUNK_LENGTH,IsosurfaceSource,TerrainMaterialPlugin,TerrainMaterialState};
 
@@ -18,6 +18,8 @@ use isosurface::{
 use std::collections::{HashSet,HashMap};
 
 const CHUNK_SEGS: usize = 64;
+
+pub const WORLD_GROUP: Group = Group::GROUP_2;
 
 pub struct WorldTerrainPlugin;
 
@@ -178,7 +180,7 @@ fn spawn_chunk_deferred(
                         (ckey.0[1] as f32) * CHUNK_LENGTH - CHUNK_LENGTH / 2.0,),
                     ..default()
                 })
-                .insert(CollisionGroups::new(Group::GROUP_1 | Group::GROUP_2, Group::GROUP_1 | Group::GROUP_2));
+                .insert(CollisionGroups::new(CHARACTER_GROUP | WORLD_GROUP, CHARACTER_GROUP | WORLD_GROUP));
 
             if let Some(collider) = collider_opt {
                 cmd.insert(collider);
